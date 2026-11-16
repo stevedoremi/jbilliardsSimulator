@@ -18,7 +18,9 @@
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;padding:4px;background:var(--bg);color:var(--fg);font:14px/1.45 "Noto Sans KR",system-ui,-apple-system,sans-serif}
 .wrap{max-width:1200px;margin:0 auto}
-.stage{display:flex;flex-direction:column;gap:6px;height:calc(100vh - 8px);height:calc(100dvh - 8px);min-height:420px}
+:root{--gb:0px}
+@media (display-mode: fullscreen),(display-mode: standalone){:root{--gb:max(env(safe-area-inset-bottom,0px),44px)}} /* 앱(전체화면)으로 열 때 화면 맨 아래 제스처 영역(홈 바)과 겹쳐 버튼이 안 눌리는 것 방지 */
+.stage{display:flex;flex-direction:column;gap:6px;height:calc(100vh - 8px - var(--gb));height:calc(100dvh - 8px - var(--gb));min-height:420px}
 .tbl{flex:none;min-width:0;display:flex;justify-content:center;position:relative}
 .ctl{--bh:72px;max-width:600px;width:100%;margin:0 auto;flex:none;display:flex;align-items:center;justify-content:space-between;gap:4px;padding:0 4px}
 .tipw{flex:none;width:var(--bh);height:var(--bh)}
@@ -41,7 +43,7 @@ button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
 @media (max-width:380px){.ctl{--bh:60px}.sg{width:30px}#modeBtn,#histBtn{width:46px}#shotBtn,#shotSplit{width:66px}#shotBtn b{font-size:20px}}
 @media (max-width:340px){.ctl{--bh:56px}.sg{width:28px}#modeBtn,#histBtn{width:42px}#shotBtn,#shotSplit{width:58px}}
 #shotSplit button{flex:1;min-height:0;padding:0;font-size:20px}
-.menu{display:none;position:fixed;z-index:20;left:50%;bottom:12px;transform:translateX(-50%);width:min(340px,calc(100vw - 24px));flex-direction:column;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;box-shadow:0 6px 24px rgba(0,0,0,.35)}
+.menu{display:none;position:fixed;z-index:20;left:50%;bottom:calc(12px + var(--gb));transform:translateX(-50%);width:min(340px,calc(100vw - 24px));flex-direction:column;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;box-shadow:0 6px 24px rgba(0,0,0,.35)}
 .menu.open{display:flex}
 .menu{max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);overflow:auto}
 body.tipopen{touch-action:none}
@@ -766,8 +768,9 @@ document.addEventListener('pointermove',e=>{
 });
 ['pointerup','pointercancel'].forEach(ev=>document.addEventListener(ev,e=>{if(bgd&&e.pointerId===bgd.id){if(bgd.moved)ttShow(tipLabel(),tp.getBoundingClientRect(),700);bgd=null}}));
 $('len').oninput=()=>{if(shot)finishShot();draw()};
-$('shotUndo').onclick=undoShot;
-$('shotSkip').onclick=finishShot;
+const justShot=()=>shot&&performance.now()-shot.t0<500; // 샷 직후 0.5초 안의 들어오는 click(손가락 아래로 바뀐 버튼에 들어온 것)은 무시
+$('shotUndo').onclick=()=>{if(justShot())return;undoShot()};
+$('shotSkip').onclick=()=>{if(justShot())return;finishShot()};
 $('setBtn').onclick=()=>$('setMenu').classList.toggle('open');
 $('histClear').onclick=()=>{hist=[];histN=0;histSave();hIdx=0;if(histMode)histNav()};
 $('histBtn').onclick=()=>histMode?histExit():histEnter();
@@ -783,18 +786,19 @@ $('hDel').onclick=()=>{ // 두 번 눌러야 삭제(실수 방지)
 };
 $('setClose').onclick=()=>$('setMenu').classList.remove('open');
 (()=>{ // 샷 버튼: 탭 = 샷, 위/아래로 드래그 = 레일 스피드 (20px당 0.5)
-  const b=$('shotBtn'),L=$('len');let st=null;
-  b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);st={y:e.clientY,v:+L.value||3,moved:false}});
+  const b=$('shotBtn'),L=$('len');let st=null,dragged=false;
+  b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);st={y:e.clientY,v:+L.value||3,moved:false};dragged=false});
   b.addEventListener('pointermove',e=>{
     if(!st)return;const dy=st.y-e.clientY;
-    if(!st.moved){if(Math.abs(dy)<7)return;st.moved=true}
+    if(!st.moved){if(Math.abs(dy)<7)return;st.moved=true;dragged=true}
     const v=Math.min(+L.max,Math.max(+L.min,st.v+Math.round(dy/20)*0.5));
     if(v!==(+L.value)){L.value=v;$('lenV').textContent=v;L.oninput()}
     ttShow(v+' 레일',b.getBoundingClientRect());
   });
-  b.addEventListener('pointerup',()=>{const s=st;st=null;if(s&&!s.moved)startShot();else if(s)ttShow((+L.value)+' 레일',b.getBoundingClientRect(),600)});
+  b.addEventListener('pointerup',()=>{const s=st;st=null;if(s&&s.moved)ttShow((+L.value)+' 레일',b.getBoundingClientRect(),600)});
   b.addEventListener('pointercancel',()=>{st=null});
-  b.addEventListener('click',e=>{if(e.detail===0)startShot()}); // 키보드(Enter) 접근
+  // 샷은 pointerup이 아니라 click에서 시작: pointerup에서 버튼이 ↺/⏭로 바뀌면 곧이어 오는 click이 새 버튼(손가락 아래)에 들어가 샷이 바로 취소/건너뛰기 되는 문제 방지
+  b.addEventListener('click',()=>{if(dragged){dragged=false;return}startShot()});
 })();
 $('rect').onchange=draw;
 /* ---- 시스템 세트: 레일 B/T(장축 0~8), L/R(단축 0~4), 값=프레임 다이아몬드 번호 ---- */
