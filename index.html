@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#13171b">
+<title>당구 시스템 연습</title>
+<style>
+:root{--bg:#eef0f2;--fg:#1c2127;--card:#fff;--line:#d3d8de;--acc:#1f6f55;--mut:#5c6670;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#13171b;--fg:#e6e9ec;--card:#1e242a;--line:#323a43;--acc:#4cc59a;--mut:#9aa5af}}
+:root[data-theme="dark"]{--bg:#13171b;--fg:#e6e9ec;--card:#1e242a;--line:#323a43;--acc:#4cc59a;--mut:#9aa5af}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;padding:4px;background:var(--bg);color:var(--fg);font:14px/1.45 "Noto Sans KR",system-ui,-apple-system,sans-serif}
+.wrap{max-width:1200px;margin:0 auto}
+.stage{display:flex;flex-direction:column;gap:6px;height:calc(100vh - 8px);height:calc(100dvh - 8px);min-height:420px}
+.tbl{flex:none;min-width:0;display:flex;justify-content:center;position:relative}
+.ctl{--bh:72px;max-width:600px;width:100%;margin:0 auto;flex:none;display:flex;align-items:center;justify-content:space-between;gap:4px;padding:0 4px}
+.tipw{flex:none;width:var(--bh);height:var(--bh)}
+#tip{display:block;width:100%;height:100%;touch-action:none;cursor:pointer}
+#tip.big{position:fixed;z-index:30;filter:drop-shadow(0 8px 16px rgba(0,0,0,.5))}
+#modeBtn,#histBtn{flex:none;height:var(--bh);padding:0}
+#modeBtn{margin-left:auto}
+.sg{flex:none;width:34px;height:var(--bh);display:flex;flex-direction:column;gap:4px}
+.sg button{flex:1;min-height:0;width:100%;padding:0;display:flex;align-items:center;justify-content:center}
+#setBtn{font-size:18px}
+#modeBtn,#histBtn{width:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:13px;line-height:1}
+#modeBtn span:first-child,#histBtn span:first-child{font-size:18px}
+button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.rt{display:flex;gap:6px;height:var(--bh)}
+#shotBtn{flex:none;width:76px;height:100%;padding:0;font-weight:700;font-size:15px;border-color:var(--acc);display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:4px 0;touch-action:none;user-select:none;-webkit-user-select:none}
+#shotBtn i{font-style:normal;font-size:10px;color:var(--mut);line-height:1}
+#shotBtn b{font-size:24px;line-height:1}
+#shotBtn span{line-height:1}
+#shotSplit{display:none;flex:none;width:76px;height:100%;flex-direction:column;gap:4px}
+@media (max-width:380px){.ctl{--bh:60px}.sg{width:30px}#modeBtn,#histBtn{width:46px}#shotBtn,#shotSplit{width:66px}#shotBtn b{font-size:20px}}
+@media (max-width:340px){.ctl{--bh:56px}.sg{width:28px}#modeBtn,#histBtn{width:42px}#shotBtn,#shotSplit{width:58px}}
+#shotSplit button{flex:1;min-height:0;padding:0;font-size:20px}
+.menu{display:none;position:fixed;z-index:20;left:50%;bottom:12px;transform:translateX(-50%);width:min(340px,calc(100vw - 24px));flex-direction:column;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;box-shadow:0 6px 24px rgba(0,0,0,.35)}
+.menu.open{display:flex}
+.menu{max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);overflow:auto}
+body.tipopen{touch-action:none}
+#tt{position:fixed;z-index:40;pointer-events:none;display:none;transform:translateX(-50%);background:rgba(20,20,20,.9);color:#fff;font-size:14px;font-weight:700;padding:5px 11px;border-radius:8px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.hnav{display:none;position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:5;align-items:center;gap:6px;background:rgba(20,20,20,.65);border:1px solid rgba(255,255,255,.3);border-radius:10px;padding:4px 6px;color:#fff}
+.hnav.on{display:flex}
+.hnav button{height:36px;min-width:46px;padding:0;background:transparent;color:#fff;border-color:rgba(255,255,255,.4);font-size:16px}
+.hnav button:disabled{opacity:.3}
+.hnav button.arm{background:#c0392b;border-color:#c0392b}
+#hDel{font-size:13px;margin-left:4px}
+.hnav span{min-width:64px;text-align:center;font-size:13px}
+.mrow{display:flex;gap:8px;align-items:center}.mrow>span{min-width:76px;color:var(--mut)}.mrow label{margin:0}
+#c{display:block;width:100%;border-radius:6px;touch-action:none;cursor:crosshair}
+.panel{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px}
+.card h2{margin:0 0 8px;font-size:14px;font-weight:700}
+.row{display:flex;justify-content:space-between;color:var(--mut);margin-top:6px}
+.row b{color:var(--fg);font-weight:600}
+input[type=range]{width:100%;accent-color:var(--acc)}
+button{font:inherit;color:var(--fg);background:transparent;border:1px solid var(--line);border-radius:6px;padding:4px 10px;cursor:pointer}
+button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+button.fill{border-color:var(--acc);font-weight:700}
+select,input[type=text]{font:inherit;color:var(--fg);background:var(--card);border:1px solid var(--line);border-radius:6px;padding:4px 6px}
+label{display:flex;gap:6px;align-items:center;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="stage">
+    <div class="tbl"><canvas id="c"></canvas><div class="hnav" id="hnav"><button id="hPrev">◀</button><span id="hLabel"></span><button id="hNext">▶</button><button id="hDel" title="지금 보이는 기록 삭제">삭제</button></div></div>
+    <div class="ctl">
+      <div class="sg"><button id="setBtn" title="설정">⚙</button><button id="guideBtn" class="on" title="가이드선 켜기/끄기"><svg width="18" height="18" viewBox="0 0 18 18"><path d="M2 15 L9 4 L16 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-dasharray="3 2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+      <button id="modeBtn" title="공 이동 모드"><span>✥</span><span>공 이동</span></button>
+      <button id="histBtn" title="샷 기록 보기"><span>⟲</span><span>기록</span></button>
+      <div class="tipw"><canvas id="tip" width="320" height="320"></canvas></div>
+      <div class="rt">
+        <button id="shotBtn" title="누르면 샷 · 위아래로 드래그하면 레일 스피드 변경"><i>▲</i><b id="lenV">3</b><span>● 샷</span><i>▼</i></button>
+        <div id="shotSplit"><button id="shotUndo" title="이전 배치로 돌아가기">↺</button><button id="shotSkip" title="결과 바로 보기">⏭</button></div>
+      </div>
+      <input id="len" type="number" min="0.5" max="5" step="0.5" value="3" style="display:none">
+    </div>
+  </div>
+  <div id="tt"></div>
+  <div class="menu" id="setMenu">
+    <div class="mrow"><span>당점 표시</span><label><input type="radio" name="tm" value="grid">격자</label><label><input type="radio" name="tm" value="clock" checked>시계</label></div>
+    <div class="mrow"><span>전체화면</span><button id="fsBtn">전체화면 켜기/끄기</button></div>
+    <div class="mrow"><span>테이블 회전</span><button id="rotL">⟲ 90°</button><button id="rotR">⟳ 90°</button></div>
+    <div class="mrow"><label><input type="checkbox" id="rect" checked>공중심사각형 표시</label></div>
+    <div class="mrow" style="justify-content:space-between"><span>샷 기록</span><button id="histClear">모두 지우기</button></div>
+    <div class="mrow"><button id="setClose" style="margin-left:auto">닫기</button></div>
+    <span id="tl" hidden></span><span id="ang" hidden></span>
+  </div>
+  <div class="panel">
+    <div class="card">
+      <h2>쿠션 반응 (핑·퉁)</h2>
+      <div id="pt" style="font-size:14px;line-height:1.6;color:var(--mut)"></div>
+    </div>
+    <div class="card">
+      <h2>시스템 경로</h2>
+      <div class="row" style="margin-top:0"><span>시스템</span><select id="sysSel" style="max-width:140px"></select></div>
+      <div style="display:flex;gap:6px;margin-top:6px"><input id="sysName" type="text" placeholder="새 시스템 이름" style="flex:1;min-width:0"><button id="sysAdd">추가</button></div>
+      <div style="margin-top:6px"><button id="sysDel" style="display:none">시스템 삭제</button></div>
+      <label id="learnRow" style="display:none;margin-top:6px"><input type="checkbox" id="learn">학습 모드 (선택한 세트 연습)</label>
+      <label style="margin-top:6px"><input type="checkbox" id="extTail">마지막 C 이후도 엔진으로 이어 그리기</label>
+      <div style="margin-top:6px"><button id="snapCue">수구를 C0 선분 위로</button></div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"><button id="recBtn">새 세트 입력</button><button id="recDone" style="display:none">세트 완료</button><button id="recCancel" style="display:none">취소</button></div>
+      <div id="chips" style="display:none;flex-wrap:wrap;gap:4px;margin-top:8px;align-items:center"></div>
+      <div id="rs" style="color:var(--mut);min-height:20px;margin-top:4px"></div>
+      <div id="slist" style="margin-top:6px"></div>
+      <div style="margin-top:6px"><button id="delSel" style="display:none">선택 삭제</button></div>
+      <div id="fmsg" style="color:var(--mut);font-size:12px;margin-top:4px;min-height:16px"></div>
+      <div id="sinfo" style="color:var(--mut);margin-top:6px"></div>
+      <div id="sedit" style="display:none;flex-wrap:wrap;gap:6px;margin-top:6px"><button id="eBtn">점 수정</button><button id="eTip">당점 적용</button></div>
+      <div style="display:none"><textarea id="data"></textarea><span id="msg"></span></div>
+    </div>
+  </div>
+</div>
+<script>
+const W=2840,H=1420,R=32.75,M=170;
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+const tp=document.getElementById('tip'),tc=tp.getContext('2d');
+const balls=[{x:700,y:710,c:'#fafafa'},{x:2000,y:420,c:'#ffd21f'},{x:2100,y:1020,c:'#d62d2d'}];
+let aim=Math.atan2(balls[1].y-balls[0].y,balls[1].x-balls[0].x),sx=0,sy=0,S=1,dpr=1;
+const $=id=>document.getElementById(id);
+
+let tipOpen=false,tipRad=0,histMode=false;
+const CUE_L=1300,CUE_GAP=20,CUE_FINE=40000; // 큐 길이/수구와의 간격(mm), 큐 잡고 끌 때 미세 조정 비율(클수록 더 미세)
+let rot=0,rotManual=false; // 테이블 회전(시계방향 90° 단위, 0~3)
+function resize(){
+  if(!rotManual)rot=innerHeight>innerWidth?1:0; // 세로 화면이면 당구대를 세워서 화면 전체 사용
+  const pe=cv.parentElement,st=pe.parentElement,w=pe.clientWidth,ph=st.clientHeight-[...st.children].reduce((a,e)=>a+(e===pe?0:e.offsetHeight+6),0);dpr=window.devicePixelRatio||1;
+  const TW=W+2*M,TH=H+2*M,odd=rot%2===1,aw=odd?TH:TW,ah=odd?TW:TH;
+  let cw=w;const mh=Math.max(100,ph);
+  if(cw*ah/aw>mh)cw=mh*aw/ah;
+  const ch=cw*ah/aw;
+  cv.style.width=cw+'px';cv.style.height=ch+'px';cv.style.margin='0 auto';
+  cv.width=Math.round(cw*dpr);cv.height=Math.round(ch*dpr);S=cv.width/aw;draw();
+if(tipOpen){tipBig(false);tipRad=tipBig(true)}
+}
+function drawCue(){ // 수구 뒤쪽에 진행방향과 일직선으로 큐를 그림
+  const c=balls[0],x0=-(R+CUE_GAP),w=t=>18+28*t/CUE_L;
+  ctx.save();ctx.translate(c.x,c.y);ctx.rotate(aim);
+  const seg=(a,b,col)=>{ctx.beginPath();ctx.moveTo(x0-a,-w(a)/2);ctx.lineTo(x0-b,-w(b)/2);ctx.lineTo(x0-b,w(b)/2);ctx.lineTo(x0-a,w(a)/2);ctx.closePath();ctx.fillStyle=col;ctx.fill()};
+  seg(0,14,'#4a90d9');seg(14,48,'#f4f1e8');seg(48,820,'#e3c288');seg(820,CUE_L,'#4b2e1a');
+  ctx.restore();
+}
+function drawAimLine(){ // 큐가 가리키는 방향을 테이블 최외곽(프레임 바깥 가장자리)까지 파란 직선으로
+  const c=balls[0],dx=Math.cos(aim),dy=Math.sin(aim);
+  const tx=dx>1e-9?(W+M-c.x)/dx:dx<-1e-9?(-M-c.x)/dx:1e18,ty=dy>1e-9?(H+M-c.y)/dy:dy<-1e-9?(-M-c.y)/dy:1e18,t=Math.min(tx,ty);
+  ctx.save();ctx.setLineDash([]);ctx.lineCap='round';ctx.lineWidth=2.5*dpr/S;ctx.strokeStyle='rgba(41,128,255,.95)';
+  ctx.beginPath();ctx.moveTo(c.x,c.y);ctx.lineTo(c.x+dx*t,c.y+dy*t);ctx.stroke();
+  ctx.restore();
+}
+function cueHit(p){
+  const c=balls[0],dx=Math.cos(aim),dy=Math.sin(aim),rx=p.x-c.x,ry=p.y-c.y;
+  const along=-(rx*dx+ry*dy)-(R+CUE_GAP),lat=Math.abs(-rx*dy+ry*dx),tol=28*dpr/S;
+  return along>-12&&along<CUE_L+tol&&lat<tol;
+}
+function xform(){
+  const TW=W+2*M,TH=H+2*M;
+  if(rot===0)ctx.setTransform(S,0,0,S,M*S,M*S);
+  else if(rot===1)ctx.setTransform(0,S,-S,0,S*(TH-M),S*M);
+  else if(rot===2)ctx.setTransform(-S,0,0,-S,S*(TW-M),S*(TH-M));
+  else ctx.setTransform(0,-S,S,0,S*M,S*(TW-M));
+}
+addEventListener('resize',resize);
+
+/* ---- 궤적 계산 (공중심사각형 기준) ---- */
+function wallT(p,v){
+  let t=Infinity,m=null;
+  if(v.x>1e-9){const q=Math.max(0,(W-R-p.x)/v.x);if(q<t){t=q;m={x:1,y:0}}}
+  else if(v.x<-1e-9){const q=Math.max(0,(R-p.x)/v.x);if(q<t){t=q;m={x:-1,y:0}}}
+  if(v.y>1e-9){const q=Math.max(0,(H-R-p.y)/v.y);if(q<t){t=q;m={x:0,y:1}}}
+  else if(v.y<-1e-9){const q=Math.max(0,(R-p.y)/v.y);if(q<t){t=q;m={x:0,y:-1}}}
+  return{t,m};
+}
+/* ---- 물리엔진 (mm, s). 좌표: x→, y↓, z↓(테이블 방향). wz>0 = 위에서 볼 때 시계방향 (왼쪽 당점 → 시계방향, 오른쪽 당점 → 반시계방향) ----
+   상태: 위치, 선속도(vx,vy), 각속도(wx,wy,wz). 천 마찰(미끄럼→구름), 쿠션/공 충돌 시 접촉점 상대속도와 쿠션·공 마찰로 회전 갱신 */
+// 물리 상수: TIP_EFF=당점 회전 세기 보정(레일 N이 '마찰 받고도 N레일 이동'이 되도록 초속이 크게 잡혀서, 회전을 같은 비율로 줄여 하단/좌우가 과해지지 않게 맞춘 값), MU_S=천 미끄럼 마찰(문헌 전형 0.2, 범위 0.15~0.4), MU_B=공-공 마찰(문헌 전형 0.06), ALPHA_Z=좌우(수직축) 회전 감쇠(rad/s²)
+const TIP_EFF=0.25,GRAV=9810,MU_S=0.2,A_ROLL=100,ALPHA_Z=14,E_B=0.96,MU_B=0.06,DT=0.001;
+function slide(b,dt){
+  const ux=b.vx+R*b.wy,uy=b.vy-R*b.wx,us=Math.hypot(ux,uy); // 천과 닿는 점의 상대속도
+  if(us>1){
+    const f=Math.min(1,us/(3.5*MU_S*GRAV*dt)),ax=-MU_S*GRAV*ux/us*f,ay=-MU_S*GRAV*uy/us*f;
+    b.vx+=ax*dt;b.vy+=ay*dt;b.wx+=-2.5*ay/R*dt;b.wy+=2.5*ax/R*dt;
+  }else{
+    const sp=Math.hypot(b.vx,b.vy),k=sp>0?Math.max(0,sp-A_ROLL*dt)/sp:0;
+    b.vx*=k;b.vy*=k;b.wy=-b.vx/R;b.wx=b.vy/R;
+  }
+  const d=ALPHA_Z*dt; // 천 접촉면 회전(피벗) 마찰: 방향은 바꾸지 않음
+  if(b.wz)b.wz=Math.abs(b.wz)<=d?0:b.wz-Math.sign(b.wz)*d;
+}
+function mark(cx,b,k,info){const p={x:b.x,y:b.y};cx.pts.push(p);cx.last=p;if(k)cx.ev.push(Object.assign({k,p},info))}
+/* ---- 쿠션 충돌 모델 (교체 가능) ----
+   입력/출력은 쿠션 기준 지역 좌표: v1=쿠션 쪽 속도, v2=쿠션과 나란한 속도, w1·w2·w3=각속도(축: 쿠션 법선, 접선, 아래쪽).
+   w3>0 = 위에서 볼 때 시계방향. 반환: [v1',v2',w1',w2',w3'] */
+const CUSHION_MODEL='han2005'; // 'han2005' | 'impulse' | 'simple'
+const RULE_REFLECT_LE_INCIDENT=true; // 사용자 요구: 정회전·무회전이면 반사각 ≤ 입사각 (끄면 모델 결과 그대로)
+const CU={e:0.8,muW:0.14,muT:0.2,h:37}; // 쿠션 반발(에너지 기준), 공-쿠션 마찰, 충돌 중 공-천 마찰, 쿠션 높이(mm, 슬레이트 기준)
+// impulse: 충돌 중 법선 충격량을 조금씩 키우며 쿠션 접촉점·천 접촉점의 미끄럼과 마찰(쿠션 높이 h)을 적분.
+// 압축 구간에서 접촉점 법선속도가 0이 될 때까지, 이후 반발 구간에서 e²×압축일 만큼 되돌려 줌 (Stronge 방식). 공은 천 위에 머문다고 가정(점프 무시)
+function cushionImpulse(v1,v2,w1,w2,w3){
+  const sn=(CU.h-R)/R,cs=Math.sqrt(1-sn*sn),I=0.4*R*R,e2=CU.e*CU.e;
+  const uwx=()=>v1-R*sn*w2;
+  const u0=uwx();if(u0<=0)return[v1,v2,w1,w2,w3];
+  const dP=u0/400;let Wc=0,Wr=0,comp=true;
+  for(let it=0;it<3000;it++){
+    const uy=v2+R*cs*w3+R*sn*w1,uz=-R*cs*w2;           // 쿠션 접촉점의 미끄럼 속도 (접선·수직)
+    const sx=v1+R*w2,sy=v2-R*w1;                          // 천 접촉점의 미끄럼 속도
+    let f2=0,f3=0;const sw=Math.hypot(uy,uz);
+    if(sw>1e-9){const dz=-uz/sw,K=1+2.5*(1-sn*sn*dz*dz),f=Math.min(CU.muW*dP,sw/K);f2=-f*uy/sw;f3=f*dz}
+    let g1=0,g2=0;const st=Math.hypot(sx,sy),dN=Math.max(0,f3);  // 쿠션 마찰이 공을 누르는 만큼 천이 받쳐 줌
+    if(st>1e-9&&dN>0){const f=Math.min(CU.muT*dN,st/3.5);g1=-f*sx/st;g2=-f*sy/st}
+    const ub=uwx();
+    v1+=-dP+g1;v2+=f2+g2;
+    w1+=(R*sn*f2-R*g2)/I;w2+=(-R*cs*f3+R*sn*dP+R*g1)/I;w3+=R*cs*f2/I;
+    const dW=0.5*(ub+uwx())*dP;
+    if(comp){Wc+=dW;if(uwx()<=0)comp=false}
+    else{Wr+=dW;if(-Wr>=e2*Wc)break}
+  }
+  return[v1,v2,w1,w2,w3];
+}
+// simple: 이전 방식(법선 반발 + 접선 마찰 한계 + 접촉 높이 0.25R). 비교·되돌리기용
+function cushionSimple(v1,v2,w1,w2,w3){
+  const e=0.8,mu=0.5,H=0.25*R,ut=v2+R*w3,Jn=(1+e)*v1,Jt=-Math.sign(ut)*Math.min(mu*Jn,Math.abs(ut)/3.5);
+  return[-e*v1,v2+Jt,w1+2.5*H*Jt/(R*R),w2+2.5*H*Jn/(R*R),w3+2.5*Jt/R];
+}
+// han2005: Inhwan Han (2005) 'Dynamics in Carom and Three Cushion Billiards'의 닫힌 형태 충격량 모델.
+// pooltool(Evan Kiefl, Apache-2.0)의 han_2005/model.py 공개 소스를 참고해 JavaScript로 다시 구현함 (식 14·16·17·20).
+// 차이점 2가지: ① 미끄러짐 구간(입사각 약 80° 이상)의 마찰 방향을 접촉점 미끄럼 반대로 고침(원본 식은 에너지가 늘어남),
+// ② 반발계수 e·마찰계수 μ를 속도·각도 함수가 아니라 상수(CU.e, CU.muW)로 둠 (원본의 경험식은 확인하지 못함)
+function cushionHan(v1,v2,w1,w2,w3){
+  const sn=(CU.h-R)/R,th=Math.asin(sn),cs=Math.cos(th),II=0.4*R*R,A=3.5,B=1,e=CU.e,mu=CU.muW;
+  const vx=v1,vy=-v2,wx=w1,wy=-w2,wz=-w3; // 쿠션 좌표(x=쿠션 쪽, z=위, 오른손계)로 변환
+  if(vx<=0)return[v1,v2,w1,w2,w3];
+  const sx=vx*sn+R*wy,sy=-vy-R*wz*cs+R*wx*sn,c=vx*cs,sw=Math.hypot(sx,sy);
+  const N=(1+e)*c/B;let PX,PY,PZ;
+  if(sw/A<=N){PX=-sx/A*sn-N*cs;PY=sy/A;PZ=sx/A*cs-N*sn} // 붙음
+  else{const t1=mu*N*sx/sw,t2=mu*N*sy/sw;PX=-t1*sn-N*cs;PY=t2;PZ=t1*cs-N*sn} // 미끄러짐
+  return[vx+PX,-(vy+PY),wx-R/II*PY*sn,-(wy+R/II*(PX*sn-PZ*cs)),-(wz+R/II*PY*cs)];
+}
+const CUSHION_MODELS={han2005:cushionHan,impulse:cushionImpulse,simple:cushionSimple};
+const STAT={clamps:0};
+function cushionResolve(v1,v2,w1,w2,w3){
+  const r=CUSHION_MODELS[CUSHION_MODEL](v1,v2,w1,w2,w3);
+  if(RULE_REFLECT_LE_INCIDENT&&v1>0&&v2*w3>=0&&v2!==0&&Math.abs(r[1])/Math.abs(r[0])>Math.abs(v2)/v1&&r[1]*v2>0){
+    const t=Math.sign(r[1])*Math.abs(r[0])*Math.abs(v2)/v1;
+    r[4]+=2.5*Math.sqrt(1-((CU.h-R)/R)**2)*(t-r[1])/R;r[1]=t;STAT.clamps++;
+  }
+  return r;
+}
+function wallHit(b,mx,my,cx){
+  b.x=Math.min(W-R,Math.max(R,b.x));b.y=Math.min(H-R,Math.max(R,b.y));
+  const loc=(vx,vy,wx,wy,wz)=>[vx*mx+vy*my,-vx*my+vy*mx,wx*mx+wy*my,-wx*my+wy*mx,wz];
+  const [v1,v2,w1,w2,w3]=loc(b.vx,b.vy,b.wx,b.wy,b.wz);
+  const [n1,n2,m1,m2,m3]=cushionResolve(v1,v2,w1,w2,w3);
+  b.vx=n1*mx-n2*my;b.vy=n1*my+n2*mx;b.wx=m1*mx-m2*my;b.wy=m1*my+m2*mx;b.wz=m3;
+  // 핑(회전에 의한 반사각 변화)·퉁(되튀는 강도) 분석용 정보: 같은 입사에서 횡회전이 없을 때와 비교
+  const sg=Math.sign(v2)||1,deg=(t,n)=>Math.atan2(t,n)*180/Math.PI,z=cushionResolve(v1,v2,w1,w2,0);
+  mark(cx,b,'c',{rail:mx>0?'R':mx<0?'L':my>0?'B':'T',vn:v1,vnOut:Math.abs(n1),thIn:deg(Math.abs(v2),v1),thOut:deg(n2*sg,Math.abs(n1)),ping:deg(z[1]*sg,Math.abs(z[0]))-deg(n2*sg,Math.abs(n1))});
+}
+function ballHit(b,o,k,cx){
+  cx.hit[k]=true;
+  const dx=o.x-b.x,dy=o.y-b.y,dl=Math.hypot(dx,dy),nx=dx/dl,ny=dy/dl,tx=-ny,ty=nx;
+  const vn=b.vx*nx+b.vy*ny,vt=b.vx*tx+b.vy*ty,ut=vt+R*b.wz,Jn=0.5*(1+E_B)*vn;
+  const Jt=-Math.sign(ut)*Math.min(MU_B*Jn,Math.abs(ut)/7);
+  const thick=1-Math.abs(vt)/(Math.hypot(b.vx,b.vy)||1); // 두께 = 1 − 횡방향 어긋남/(2R): 정면=1(8/8), 반쪽=0.5(4/8)
+  const ob={x:o.x,y:o.y,vx:Jn*nx-Jt*tx,vy:Jn*ny-Jt*ty,wx:0,wy:0,wz:2.5*Jt/R};
+  b.vx+=-Jn*nx+Jt*tx;b.vy+=-Jn*ny+Jt*ty;b.wz+=2.5*Jt/R;
+  const odl=Math.hypot(ob.vx,ob.vy)||1;
+  mark(cx,b,'b',{thick,od:{x:ob.vx/odl,y:ob.vy/odl},op:{x:o.x,y:o.y},c:o.c});
+  cx.objs.push({c:o.c,pts:simulate(ob,null,cx.L).pts});
+}
+function advance(b,dt,cx){
+  let left=dt;
+  for(let g=0;g<4&&left>1e-9;g++){
+    let t=left,type=null,m=null,kb=-1;const hx=W-R,hy=H-R;
+    if(b.vx>0&&b.x+b.vx*left>hx){const q=Math.max(0,(hx-b.x)/b.vx);if(q<t){t=q;type='w';m=[1,0]}}
+    else if(b.vx<0&&b.x+b.vx*left<R){const q=Math.max(0,(R-b.x)/b.vx);if(q<t){t=q;type='w';m=[-1,0]}}
+    if(b.vy>0&&b.y+b.vy*left>hy){const q=Math.max(0,(hy-b.y)/b.vy);if(q<t){t=q;type='w';m=[0,1]}}
+    else if(b.vy<0&&b.y+b.vy*left<R){const q=Math.max(0,(R-b.y)/b.vy);if(q<t){t=q;type='w';m=[0,-1]}}
+    if(cx.obs)cx.obs.forEach((o,k)=>{
+      if(cx.hit[k])return;
+      const dx=b.x-o.x,dy=b.y-o.y,a=b.vx*b.vx+b.vy*b.vy,bq=dx*b.vx+dy*b.vy,ds=bq*bq-a*(dx*dx+dy*dy-4*R*R);
+      if(a<1e-9||ds<0)return;
+      const q=(-bq-Math.sqrt(ds))/a;
+      if(q>=0&&q<t){t=q;type='b';kb=k}
+    });
+    b.x+=b.vx*t;b.y+=b.vy*t;left-=t;
+    if(type==='w')wallHit(b,m[0],m[1],cx);
+    else if(type==='b')ballHit(b,cx.obs[kb],kb,cx);
+    else break;
+  }
+}
+function simulate(b,obs,L){
+  const cx={obs,hit:obs?obs.map(()=>false):[],pts:[{x:b.x,y:b.y}],ev:[],objs:[],L,last:{x:b.x,y:b.y}};
+  let dist=0;
+  for(let i=0;i<150000&&dist<L;i++){
+    const px=b.x,py=b.y;
+    slide(b,DT);advance(b,DT,cx);
+    dist+=Math.hypot(b.x-px,b.y-py);
+    if(Math.hypot(b.x-cx.last.x,b.y-cx.last.y)>=10)mark(cx,b);
+    if(Math.hypot(b.vx,b.vy)<2)break;
+  }
+  mark(cx,b);cx.dist=dist;
+  return cx;
+}
+// 레일 스피드 N: 수구가 쿠션 손실까지 포함해 실제로 이동하는 총 거리가 장축 레일 길이의 N배가 되도록 보정.
+// 쿠션·미끄럼 손실 때문에 초속과 이동거리는 비례하지 않으므로, 쿠션 포함 평균 이동거리(L=장축 길이 단위) ↔ 초속(mm/s) 표를 미리 만들어 둠.
+// (빈 테이블, 5개 시작점×16방향 평균. 물리 상수를 바꾸면 이 표도 다시 만들어야 함)
+const PATH_V=[[0.154,400],[0.296,600],[0.424,800],[0.549,1000],[0.708,1250],[0.863,1500],[1,1750],[1.141,2000],[1.311,2300],[1.527,2694],[1.688,3000],[1.852,3400],[2.03,3800],[2.204,4300],[2.371,4800],[2.56,5400],[2.732,6000],[2.914,6700],[3.144,7500],[3.332,8400],[3.527,9400],[3.717,10500],[3.942,12000],[4.25,14000],[4.51,16000],[4.759,18000],[4.948,20000]];
+function pathToV(P){
+  const t=PATH_V;if(P<=t[0][0])return t[0][1]*Math.max(P,0)/t[0][0];
+  for(let i=1;i<t.length;i++)if(P<=t[i][0]){const f=(P-t[i-1][0])/(t[i][0]-t[i-1][0]);return t[i-1][1]+f*(t[i][1]-t[i-1][1])}
+  return t[t.length-1][1]; // 표의 끝(약 20 m/s)에서 포화
+}
+function speedOf(rails){return pathToV(rails)} // 레일 N = 마찰·쿠션 손실을 다 받고도 장축 레일 길이의 N배를 이동하는 세기
+// 당점이 중심에서 벗어날수록 같은 스트로크에서 공의 초속이 줄어듦(충격량 모델: 공 질량/큐 질량≈0.4). 1=중심
+const TIP_MASS=0.4;
+function tipV(x,y){return(1+TIP_MASS)/(1+TIP_MASS+2.5*(x*x+y*y))}
+
+/* ---- 샷: 공 3개를 동시에 시간 적분 (공-공 충돌·쿠션 포함, 충돌 시각을 정확히 계산), 실제 속도로 재생 ---- */
+let shot=null,preShot=null;
+function collide(a,b){
+  const dx=b.x-a.x,dy=b.y-a.y,dl=Math.hypot(dx,dy)||1,nx=dx/dl,ny=dy/dl,tx=-ny,ty=nx;
+  const ux=a.vx-b.vx,uy=a.vy-b.vy,vn=ux*nx+uy*ny;
+  if(vn<=0)return;
+  const ut=ux*tx+uy*ty+R*(a.wz+b.wz),Jn=0.5*(1+E_B)*vn,Jt=-Math.sign(ut)*Math.min(MU_B*Jn,Math.abs(ut)/7);
+  a.vx+=-Jn*nx+Jt*tx;a.vy+=-Jn*ny+Jt*ty;b.vx+=Jn*nx-Jt*tx;b.vy+=Jn*ny-Jt*ty;
+  a.wz+=2.5*Jt/R;b.wz+=2.5*Jt/R;
+}
+function simShot(){
+  const c=balls[0],v0=speedOf(+$('len').value||1)*tipV(sx,sy),ax=Math.cos(aim),ay=Math.sin(aim),k=TIP_EFF*2.5*v0/R;
+  const B=[{x:c.x,y:c.y,vx:ax*v0,vy:ay*v0,wx:k*sy*ay,wy:-k*sy*ax,wz:-k*sx}];
+  for(let i=1;i<3;i++)B.push({x:balls[i].x,y:balls[i].y,vx:0,vy:0,wx:0,wy:0,wz:0});
+  const dummy={pts:[],ev:[]},fr=[],hx=W-R,hy=H-R;
+  const rec=()=>B.forEach(b=>fr.push(b.x,b.y));
+  rec();
+  for(let step=0;step<30000;step++){
+    B.forEach(b=>slide(b,DT));
+    let left=DT;
+    for(let g=0;g<16&&left>1e-9;g++){
+      let t=left,ev=null;
+      B.forEach((b,i)=>{
+        let q;
+        if(b.vx>0&&b.x+b.vx*left>hx){q=Math.max(0,(hx-b.x)/b.vx);if(q<t){t=q;ev={w:i,m:[1,0]}}}
+        else if(b.vx<0&&b.x+b.vx*left<R){q=Math.max(0,(R-b.x)/b.vx);if(q<t){t=q;ev={w:i,m:[-1,0]}}}
+        if(b.vy>0&&b.y+b.vy*left>hy){q=Math.max(0,(hy-b.y)/b.vy);if(q<t){t=q;ev={w:i,m:[0,1]}}}
+        else if(b.vy<0&&b.y+b.vy*left<R){q=Math.max(0,(R-b.y)/b.vy);if(q<t){t=q;ev={w:i,m:[0,-1]}}}
+      });
+      for(let i=0;i<3;i++)for(let j=i+1;j<3;j++){
+        const a=B[i],b=B[j],dx=b.x-a.x,dy=b.y-a.y,ux=a.vx-b.vx,uy=a.vy-b.vy,du=dx*ux+dy*uy;
+        if(du<=0)continue;
+        const aa=ux*ux+uy*uy,ds=du*du-aa*(dx*dx+dy*dy-4*R*R);
+        if(ds<0)continue;
+        const q=Math.max(0,(du-Math.sqrt(ds))/aa);
+        if(q<t){t=q;ev={p:[i,j]}}
+      }
+      B.forEach(b=>{b.x+=b.vx*t;b.y+=b.vy*t});left-=t;
+      if(!ev)break;
+      if(ev.w!==undefined){wallHit(B[ev.w],ev.m[0],ev.m[1],dummy);dummy.pts.length=0;dummy.ev.length=0}
+      else collide(B[ev.p[0]],B[ev.p[1]]);
+    }
+    rec();
+    if(B.every(b=>Math.hypot(b.vx,b.vy)<2))break;
+  }
+  return fr;
+}
+function shotFrame(){
+  const fi=Math.min(shot.n-1,(performance.now()-shot.t0)/1000/DT),i=Math.floor(fi),f=fi-i,a=shot.fr,p=i*6,o=Math.min(i+1,shot.n-1)*6;
+  return[0,1,2,3,4,5].map(q=>a[p+q]+(a[o+q]-a[p+q])*f);
+}
+function shotTick(){
+  if(!shot)return;
+  draw();
+  if((performance.now()-shot.t0)/1000<(shot.n-1)*DT)shot.raf=requestAnimationFrame(shotTick);
+  else finishShot();
+}
+/* ---- 샷 기록: 샷을 칠 때마다 그 직전 배치(공 3개·진로·당점·스피드)를 저장, 설정 메뉴에서 골라 복원 ---- */
+let hist=[],histN=0;
+try{const h=JSON.parse(localStorage.getItem('bs_hist')||'null');if(h&&Array.isArray(h.list)){hist=h.list;histN=h.n||0}}catch(_){}
+function histSave(){try{localStorage.setItem('bs_hist',JSON.stringify({list:hist,n:histN}))}catch(_){}}
+function histAdd(){
+  const e={b:balls.map(b=>[b.x,b.y]),aim,sx,sy,len:+$('len').value||1},l=hist[hist.length-1];
+  if(l&&JSON.stringify([l.b,l.aim,l.sx,l.sy,l.len])===JSON.stringify([e.b,e.aim,e.sx,e.sy,e.len]))return null; // 같은 배치 반복은 한 번만
+  e.n=++histN;hist.push(e);if(hist.length>60)hist.shift();histSave();return e;
+}
+function histApply(e){
+  if(shot)finishShot();
+  balls.forEach((b,i)=>{b.x=e.b[i][0];b.y=e.b[i][1]});
+  aim=e.aim;sx=e.sx;sy=e.sy;$('len').value=e.len;$('lenV').textContent=e.len;
+  selBall=-1;preShot=null;draw();
+}
+/* 기록 모드: 버튼을 켜면 당구대 위에 ◀ ▶가 떠서, 당구대를 보면서 이전 샷 배치로 바로 이동 */
+let hIdx=0,hCur=null;
+function histNav(){
+  $('hLabel').textContent=!hist.length?'기록 없음':(hIdx<hist.length?(hIdx+1)+' / '+hist.length:'현재');
+  $('hPrev').disabled=hIdx<=0;$('hNext').disabled=hIdx>=hist.length;$('hDel').disabled=hIdx>=hist.length; // '현재'는 삭제 불가
+  hDelReset();
+}
+let hDelT=0;
+function hDelReset(){clearTimeout(hDelT);$('hDel').textContent='삭제';$('hDel').classList.remove('arm')}
+function histEnter(){
+  if(shot)finishShot();
+  if(moveMode){moveMode=false;selBall=-1;$('modeBtn').classList.remove('on')}
+  if(tipOpen)tipSet(false);
+  histMode=true;hCur={b:balls.map(b=>[b.x,b.y]),aim,sx,sy,len:+$('len').value||1};hIdx=hist.length;
+  $('histBtn').classList.add('on');$('hnav').classList.add('on');histNav();draw();
+}
+function histExit(){ // 지금 보이는 배치가 그대로 현재 배치가 됨 ('현재'까지 돌아와서 나가면 원래대로)
+  histMode=false;$('histBtn').classList.remove('on');$('hnav').classList.remove('on');draw();
+}
+function histGo(d){
+  const ni=Math.max(0,Math.min(hist.length,hIdx+d));if(ni===hIdx)return;
+  hIdx=ni;histApply(hIdx<hist.length?hist[hIdx]:hCur);histNav();
+}
+function startShot(){
+  if(histMode)histExit();
+  if(tipOpen)tipSet(false);
+  const fr=simShot();
+  preShot=balls.map(b=>({x:b.x,y:b.y}));
+  const entry=histAdd();
+  shot={fr:new Float32Array(fr),n:fr.length/6,t0:performance.now(),raf:0,entry};
+  $('shotBtn').style.display='none';$('shotSplit').style.display='flex';shotTick();
+}
+function finishShot(){ // 멈춘 자리를 그대로 공 위치로 확정 → 거기서 다시 칠 수 있음
+  if(!shot)return;
+  cancelAnimationFrame(shot.raf);
+  const a=shot.fr,o=(shot.n-1)*6;
+  balls.forEach((b,i)=>{b.x=a[o+i*2];b.y=a[o+i*2+1]});
+  shot=null;$('shotSplit').style.display='none';$('shotBtn').style.display='';draw();
+}
+function undoShot(){
+  const en=shot&&shot.entry;
+  if(shot)finishShot();
+  if(!preShot)return;
+  balls.forEach((b,i)=>{b.x=preShot[i].x;b.y=preShot[i].y});
+  if(en){const i=hist.indexOf(en);if(i>=0){hist.splice(i,1);if(en.n===histN)histN--;histSave()}} // 취소한 샷은 기록에서 제외
+  preShot=null;draw();
+}
+const extCache=new Map();
+function solveGap(b,cur,r,Tg,sGeo){ // 입사(앞 점→쿠션 위 s) → 물리 반사(wallHit) → 방향이 목표 Tg를 향하는 s를 이분법으로 탐색
+  const hz=r==='T'||r==='B',lo=R,hi=hz?W-R:H-R,e=(r==='T'||r==='L')?R:(hz?H-R:W-R);
+  const m=r==='R'?[1,0]:r==='L'?[-1,0]:r==='B'?[0,1]:[0,-1],pt=t=>hz?{x:t,y:e}:{x:e,y:t};
+  const miss=t=>{
+    const P=pt(t),l=Math.hypot(P.x-cur.x,P.y-cur.y);if(l<1)return null;
+    const ux=(P.x-cur.x)/l,uy=(P.y-cur.y)/l;if(ux*m[0]+uy*m[1]<=1e-6)return null;
+    const q=Object.assign({},b);q.x=cur.x;q.y=cur.y;let sp=Math.hypot(q.vx,q.vy);q.vx=ux*sp;q.vy=uy*sp;
+    for(let run=0;run<l;){slide(q,DT);sp=Math.hypot(q.vx,q.vy);if(sp<2)return null;q.vx=ux*sp;q.vy=uy*sp;run+=sp*DT}
+    q.x=P.x;q.y=P.y;wallHit(q,m[0],m[1],{pts:[],ev:[],last:{x:0,y:0}});
+    const ds=Math.hypot(q.vx,q.vy)||1,dx=q.vx/ds,dy=q.vy/ds,vx=Tg.x-P.x,vy=Tg.y-P.y,vl=Math.hypot(vx,vy)||1;
+    if(dx*vx+dy*vy<=0)return null;
+    return (dx*vy-dy*vx)/vl;
+  };
+  const N=48,xs=[],fs=[];
+  for(let i=0;i<=N;i++){const t=lo+(hi-lo)*i/N;xs.push(t);fs.push(miss(t))}
+  let best=null,bd=1e18;
+  for(let i=0;i<N;i++){
+    if(fs[i]===null||fs[i+1]===null||fs[i]*fs[i+1]>0)continue;
+    let a=xs[i],b2=xs[i+1],fa=fs[i];
+    for(let k=0;k<26;k++){const mid=(a+b2)/2,fm=miss(mid);if(fm===null)break;if(fa*fm<=0)b2=mid;else{a=mid;fa=fm}}
+    const t=(a+b2)/2,d=Math.abs(t-sGeo);if(d<bd){bd=d;best=t}
+  }
+  return best===null?null:pt(best);
+}
+function hitRay(P,d,r){ // P에서 d 방향 반직선이 레일 r의 공중심사각형 변과 만나는 점
+  const hz=r==='T'||r==='B',e=(r==='T'||r==='L')?R:(hz?H-R:W-R),dc=hz?d.y:d.x;
+  if(Math.abs(dc)<1e-9)return null;
+  const t=(e-(hz?P.y:P.x))/dc;if(t<=1e-6)return null;
+  const p={x:P.x+d.x*t,y:P.y+d.y*t};
+  if(p.x<R-1e-6||p.x>W-R+1e-6||p.y<R-1e-6||p.y>H-R+1e-6)return null;
+  return p;
+}
+// 입력한 C(시스템 데이터)는 그대로 두고 그 경로를 따라 이동하며 물리(천 마찰·쿠션 충돌·회전)를 계산한다.
+// - 생략된 C(자동 계산)는 앞 C에서의 물리 반사(입사각 ≥ 반사각)로 다음 쿠션점을 구한다
+// - opt.flags: 속도가 모자라 멈추면 이후 C를 미도달(q[4]) 표시 / opt.tail: 마지막 C 이후를 기본 엔진이 이어서 계산
+function extendC(c,tip,opt){
+  opt=opt||{};
+  const base=fullC(c),idx=[];base.forEach((q,i)=>{if(q)idx.push(i)});
+  if(idx.length<2)return base;
+  const rails=+$('len').value||1,key=JSON.stringify([base,tip,rails,!!opt.flags,!!opt.tail]);
+  if(extCache.has(key))return extCache.get(key);
+  const out=base.slice(),v0=speedOf(rails)*tipV(tip[0],tip[1]),kk=TIP_EFF*2.5*v0/R;
+  const unit=(a,b)=>{const l=Math.hypot(b.x-a.x,b.y-a.y)||1;return{x:(b.x-a.x)/l,y:(b.y-a.y)/l,l}};
+  const kind=q=>q[2]||'F',q0=out[idx[0]];
+  const org0=(kind(q0)==='F'?framePos:nosePos)(q0[0],q0[1]);
+  const geo=(q,o)=>{ // 시스템 데이터가 가리키는 위치(프레임점은 직선과 쿠션이 만나는 점)
+    if(kind(q)==='F'&&!q[3]){const h=hitRail(o,framePos(q[0],q[1]),q[0]);if(h)return h}
+    return fp(q[0],q[1]);
+  };
+  let cur=null,org=org0,stopAt=-1;
+  const cx={pts:[],ev:[],objs:[],hit:[],L:Infinity,last:{x:0,y:0}};
+  let b=null;
+  for(let n=1;n<idx.length;n++){
+    const qn=out[idx[n]];let T=null;
+    if(n===1){T=geo(qn,org);cur=entryPt(org,T)||fp(q0[0],q0[1]);const u0=unit(cur,T);
+      b={x:cur.x,y:cur.y,vx:u0.x*v0,vy:u0.y*v0,wx:kk*tip[1]*u0.y,wy:-kk*tip[1]*u0.x,wz:-kk*tip[0]}}
+    else if(qn[3]){ // 자동 계산 점: 앞 C에서 물리 반사된 뒤 다음 C(시스템 데이터)를 지나도록 쿠션 위 위치를 찾음
+      const nx=out[idx[n+1]],r=qn[0],hz=r==='T'||r==='B',g=geo(qn,org);
+      let p=null;
+      if(nx&&!nx[3])p=solveGap(b,cur,r,(kind(nx)==='F'?framePos:fp)(nx[0],nx[1]),hz?g.x:g.y);
+      if(!p){const d=unit({x:0,y:0},{x:b.vx,y:b.vy});p=hitRay(cur,d,r)}
+      if(p){T=p;out[idx[n]]=[r,Math.round((hz?p.x/(W/8):p.y/(H/4))*1000)/1000,'N',true]}
+      else T=g;
+    }else T=geo(qn,org);
+    const u=unit(cur,T);let sp=Math.hypot(b.vx,b.vy);
+    b.vx=u.x*sp;b.vy=u.y*sp;
+    for(let run=0;run<u.l;){
+      slide(b,DT);sp=Math.hypot(b.vx,b.vy);
+      if(sp<2){if(opt.flags){stopAt=n;break}sp=150}
+      b.vx=u.x*sp;b.vy=u.y*sp;run+=sp*DT;
+    }
+    if(stopAt>=0)break;
+    b.x=T.x;b.y=T.y;
+    const r=out[idx[n]][0],m=r==='R'?[1,0]:r==='L'?[-1,0]:r==='B'?[0,1]:[0,-1];
+    wallHit(b,m[0],m[1],cx);cur=T;org=T;
+  }
+  if(stopAt>=0){
+    for(let n=stopAt;n<idx.length;n++){const q=out[idx[n]];out[idx[n]]=[q[0],q[1],q[2],q[3],true]}
+  }else if(opt.tail&&idx[idx.length-1]<7){
+    const r=simulate(b,null,Infinity);let n=idx[idx.length-1];
+    r.ev.forEach(e=>{
+      if(e.k!=='c'||n>=7)return;
+      const p=e.p,rail=p.x<=R+1?'L':p.x>=W-R-1?'R':p.y<=R+1?'T':'B',hz=rail==='T'||rail==='B';
+      out[++n]=[rail,Math.round((hz?p.x/(W/8):p.y/(H/4))*1000)/1000,'N',true];
+    });
+  }
+  if(extCache.size>200)extCache.clear();
+  extCache.set(key,out);return out;
+}
+let traceKey='',traceVal=null;
+function trace(){
+  const c=balls[0],rails=+$('len').value||1;
+  const key=[aim,sx,sy,rails,balls.map(q=>q.x+','+q.y)].join('|');
+  if(key===traceKey)return traceVal;
+  const v0=speedOf(rails)*tipV(sx,sy),dx=Math.cos(aim),dy=Math.sin(aim),k=TIP_EFF*2.5*v0/R; // 당점→초기 회전은 속도에 비례
+  const r=simulate({x:c.x,y:c.y,vx:dx*v0,vy:dy*v0,wx:k*sy*dy,wy:-k*sy*dx,wz:-k*sx},[balls[1],balls[2]],Infinity);
+  traceKey=key;traceVal=r;return r;
+}
+
+/* ---- 핑퉁 분석: 핑=회전으로 꺾인 각도, 퉁=쿠션에서 되튀는 수직속도(수직 입사·강한 충돌일수록 큼) ---- */
+const RK=['약','중','강'],RN={T:'상',B:'하',L:'좌',R:'우'};
+function analyze(ev){
+  const out=ev.filter(e=>e.k==='c'&&e.rail).map(e=>{
+    const pa=Math.abs(e.ping),tv=e.vnOut/1000;
+    return{e,pa,pr:pa>=20?2:pa>=8?1:0,tv,tr:tv>=1?2:tv>=0.5?1:0,pair:false};
+  });
+  out.forEach((a,i)=>{ // 핑 → 퉁: 인접한 두 레일을 연달아(코너 부근) 맞고, 앞은 핑, 뒤는 퉁
+    const n=out[i+1];if(!n)return;
+    const hz=r=>r==='T'||r==='B';
+    if(hz(a.e.rail)!==hz(n.e.rail)&&a.pr>=1&&n.tr>=1&&Math.hypot(n.e.p.x-a.e.p.x,n.e.p.y-a.e.p.y)<1500)a.pair=n.pair=true;
+  });
+  return out;
+}
+function tag(x,y,t,color,sz){
+  ctx.save();ctx.translate(x,y);ctx.rotate(-rot*Math.PI/2);
+  ctx.font='bold '+(sz||46)+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.lineWidth=9;ctx.lineJoin='round';ctx.strokeStyle='rgba(0,0,0,.7)';ctx.strokeText(t,0,0);ctx.fillStyle=color;ctx.fillText(t,0,0);ctx.restore();
+}
+/* ---- 그리기 ---- */
+function drawTable(){
+  const rr=(x,y,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(x,y,w,h)};
+  rr(-M,-M,W+2*M,H+2*M,'#5b3b22');
+  rr(-60,-60,W+120,H+120,'#1b5a40');
+  rr(0,0,W,H,'#2c7a58');
+  ctx.save();ctx.strokeStyle='rgba(239,230,210,.35)';ctx.lineWidth=2;ctx.strokeRect(-115,-115,W+230,H+230);ctx.restore();
+  ctx.fillStyle='#efe6d2';
+  const dia=(x,y)=>{ctx.save();ctx.translate(x,y);ctx.rotate(Math.PI/4);ctx.fillRect(-14,-14,28,28);ctx.restore()};
+  for(let i=0;i<=8;i++){dia(W*i/8,-115);dia(W*i/8,H+115)}
+  for(let i=0;i<=4;i++){dia(-115,H*i/4);dia(W+115,H*i/4)}
+  if($('rect').checked){
+    ctx.save();ctx.setLineDash([18,14]);ctx.strokeStyle='rgba(255,255,255,.35)';ctx.lineWidth=3;
+    ctx.strokeRect(R,R,W-2*R,H-2*R);ctx.restore();
+  }
+}
+function ball(b){
+  const g=ctx.createRadialGradient(b.x-R*.35,b.y-R*.35,R*.1,b.x,b.y,R);
+  g.addColorStop(0,'#fff');g.addColorStop(.25,b.c);g.addColorStop(1,shade(b.c));
+  ctx.beginPath();ctx.arc(b.x,b.y,R,0,7);ctx.fillStyle=g;ctx.fill();
+  ctx.lineWidth=2;ctx.strokeStyle='rgba(0,0,0,.45)';ctx.stroke();
+}
+function shade(c){return c==='#fafafa'?'#b9b9b9':c==='#ffd21f'?'#b08a00':'#7a1010'}
+function path(pts){ctx.beginPath();pts.forEach((q,i)=>i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y));ctx.stroke()}
+function draw(){
+  xform();
+  ctx.clearRect(-M,-M,W+2*M,H+2*M);
+  drawTable();
+  if(shot){const f=shotFrame();balls.forEach((b,i)=>ball({x:f[i*2],y:f[i*2+1],c:b.c}));return}
+  const learn=!!curSys&&$('learn').checked,sysEdit=!!curSys&&!learn; // 시스템 편집: 입력한 경로만 표시, 학습 모드: 선택 세트 경로(하늘색)
+  const sp=learn&&!recMode&&guides?sysPath():null;
+  const tr=(recMode||sysEdit||!guides)?{pts:[],ev:[],objs:[]}:trace();
+  ctx.lineCap='round';ctx.lineJoin='round';
+  ctx.setLineDash([16,16]);ctx.lineWidth=5;
+  tr.objs.forEach(o=>{ctx.strokeStyle=o.c;path(o.pts)});
+  tr.ev.forEach(e=>{ // 적구가 분리되는 방향선: 쿠션까지 길게 연장
+    if(e.k!=='b'||!e.od)return;
+    const w=wallT(e.op,e.od);if(!isFinite(w.t))return;
+    ctx.setLineDash([6,10]);ctx.lineWidth=3;ctx.globalAlpha=0.7;ctx.strokeStyle=e.c;
+    ctx.beginPath();ctx.moveTo(e.op.x,e.op.y);ctx.lineTo(e.op.x+e.od.x*w.t,e.op.y+e.od.y*w.t);ctx.stroke();
+    ctx.globalAlpha=1;ctx.setLineDash([]);
+  });
+  ctx.setLineDash([]);ctx.lineWidth=6;ctx.strokeStyle='rgba(255,255,255,.92)';path(tr.pts);
+  ctx.lineWidth=2;
+  tr.ev.forEach((e,i)=>{
+    ctx.beginPath();
+    if(e.k==='b'){ctx.arc(e.p.x,e.p.y,R,0,7);ctx.strokeStyle='rgba(255,255,255,.9)';ctx.stroke()}
+    else{ctx.arc(e.p.x,e.p.y,10,0,7);ctx.fillStyle='#ffd21f';ctx.fill()}
+  });
+  tr.ev.forEach(e=>{ // 충돌 두께(1/8 단위)
+    if(e.k!=='b'||e.thick===undefined)return;
+    const nx=(e.op.x-e.p.x)/(2*R),ny=(e.op.y-e.p.y)/(2*R);
+    tag(e.p.x-nx*95,e.p.y-ny*95,Math.round(e.thick*8)+'/8','#7cffb0',76);
+  });
+  const an=(recMode||sysEdit||!guides)?[]:analyze(tr.ev);
+  const hb=tr.ev.find(e=>e.k==='b'&&e.thick!==undefined);
+  $('pt').innerHTML=(recMode||sysEdit)?'':((hb?'<b>1적구 두께 '+Math.round(hb.thick*8)+'/8</b><br>':'')+an.slice(0,6).map((a,i)=>(i+1)+'쿠션 '+RN[a.e.rail]+' · 입사 '+a.e.thIn.toFixed(0)+'°→'+a.e.thOut.toFixed(0)+'° · 핑 '+RK[a.pr]+'('+(a.e.ping>0?'−':'+')+a.pa.toFixed(0)+'°) · 퉁 '+RK[a.tr]+'('+a.tv.toFixed(1)+'m/s)'+(a.pair?' ★핑퉁':'')).join('<br>')||'쿠션 없음');
+  if(sp)drawC(sp.c,'#3ee0ff',null);
+  if(recMode){
+    drawC(recPts,'#ff5ec8',[sx,sy],{});
+    if(hover){const m=(hover[2]==='F'?framePos:nosePos)(hover[0],hover[1]);ctx.setLineDash([]);ctx.beginPath();ctx.arc(m.x,m.y,17,0,7);ctx.strokeStyle='#fff';ctx.lineWidth=5;ctx.stroke()}
+  }
+  if(sysEdit&&!recMode)sets.forEach((t,i)=>{if(t.sn===curSys&&i!==selSet)drawC(t.c,'#8aa0b4',t.tip,{})});
+  if(selSet>=0&&sets[selSet]&&!recMode&&!learn){
+    const sc=sets[selSet].c,ring=(m,r)=>{ctx.setLineDash([]);ctx.beginPath();ctx.arc(m.x,m.y,r,0,7);ctx.strokeStyle='#fff';ctx.lineWidth=5;ctx.stroke()};
+    drawC(sc,'#ffb020',sets[selSet].tip,sysEdit?{}:{flags:true,tail:$('extTail').checked});
+    if(editIdx>=0&&sc[editIdx]){const q=sc[editIdx];ring((q[2]==='N'?nosePos:framePos)(q[0],q[1]),24)}
+    if(editOn&&hover)ring((hover[2]==='F'?framePos:nosePos)(hover[0],hover[1]),17);
+  }
+  if(!recMode&&!sysEdit)drawAimLine(); // 큐 방향선은 가이드 토글과 무관하게 항상 표시
+  balls.forEach(ball);
+  if(!recMode&&!sysEdit)drawCue();
+  if(moveMode&&selBall>=0){const b=balls[selBall];ctx.setLineDash([]);ctx.beginPath();ctx.arc(b.x,b.y,R+10,0,7);ctx.strokeStyle='#fff';ctx.lineWidth=5;ctx.stroke()}
+  $('ang').textContent=((aim*180/Math.PI+360)%360).toFixed(1)+'°';
+  drawTip();
+}
+function drawTip(){
+  const s=tp.width,r=s*.42,cx=s/2;
+  tc.clearRect(0,0,s,s);
+  const g=tc.createRadialGradient(cx-r*.3,cx-r*.3,r*.1,cx,cx,r);
+  g.addColorStop(0,'#fff');g.addColorStop(1,'#c4c4c4');
+  tc.beginPath();tc.arc(cx,cx,r,0,7);tc.fillStyle=g;tc.fill();tc.strokeStyle='#666';tc.lineWidth=3;tc.stroke();
+  tc.strokeStyle='rgba(0,0,0,.25)';tc.lineWidth=2;
+  tc.beginPath();tc.moveTo(cx-r,cx);tc.lineTo(cx+r,cx);tc.moveTo(cx,cx-r);tc.lineTo(cx,cx+r);tc.stroke();
+  if(tmode==='clock'){
+    tc.strokeStyle='rgba(0,0,0,.18)';tc.lineWidth=2;
+    for(let h=0;h<24;h++){const a=h*Math.PI/12;tc.beginPath();tc.moveTo(cx,cx);tc.lineTo(cx+Math.sin(a)*r,cx-Math.cos(a)*r);tc.stroke()}
+    for(let t=1;t<=6;t++){tc.beginPath();tc.arc(cx,cx,t*0.1*r,0,7);tc.stroke()}
+  }
+  tipPoints().forEach(q=>{
+    const on=Math.abs(q.x-sx)<1e-3&&Math.abs(q.y-sy)<1e-3;
+    tc.beginPath();tc.arc(cx+q.x*r,cx-q.y*r,on?11:(q.h?1.8:3.5),0,7);
+    tc.fillStyle=on?'#d62d2d':q.h?'rgba(0,0,0,.18)':'rgba(0,0,0,.5)';tc.fill();
+  });
+  $('tl').textContent=tipLabel();
+}
+
+/* ---- 입력 ---- */
+let drag=null,moveMode=false,selBall=-1,guides=true;
+function wpos(e){
+  const r=cv.getBoundingClientRect(),TW=W+2*M,TH=H+2*M;
+  const u=(e.clientX-r.left)*cv.width/r.width/S,v=(e.clientY-r.top)*cv.height/r.height/S;
+  let x,y;
+  if(rot===0){x=u;y=v}else if(rot===1){x=v;y=TH-u}else if(rot===2){x=TW-u;y=TH-v}else{x=TW-v;y=u}
+  return{x:x-M,y:y-M};
+}
+cv.addEventListener('pointerdown',e=>{
+  if(shot)finishShot();
+  if(recMode){recClick(e);return}
+  if(editOn&&selSet>=0){editClick(e);return}
+  if(curSys&&!$('learn').checked)return;
+  if(histMode)return; // 기록 보기 중엔 당구대 조작 없음
+  const p=wpos(e);
+  cv.setPointerCapture(e.pointerId);
+  if(moveMode)drag={k:'m',p0:p,x0:e.clientX,y0:e.clientY,moved:false,i:selBall,b0:selBall>=0?{x:balls[selBall].x,y:balls[selBall].y}:null}; // 선택한 공만, 터치 위치와 무관하게 드래그 변위만큼 이동
+  else if(cueHit(p))drag={k:'q',p0:p,aim0:aim,n:{x:-Math.sin(aim),y:Math.cos(aim)}}; // 큐를 잡고 옆으로 움직이면 아주 미세하게 방향이 바뀜
+  else drag={k:'a',a0:Math.atan2(p.y-balls[0].y,p.x-balls[0].x),aim0:aim}; // 터치만으론 변경 없음, 드래그한 각도 변화만큼 상대 회전
+});
+cv.addEventListener('pointermove',move);
+cv.addEventListener('pointerup',e=>{
+  if(drag&&drag.k==='m'&&!drag.moved){ // 탭 = 공 선택
+    const p=wpos(e);let best=-1,bd=R*2.2;
+    balls.forEach((b,i)=>{const d=Math.hypot(b.x-p.x,b.y-p.y);if(d<bd){bd=d;best=i}});
+    if(best>=0){selBall=best;draw()}
+  }
+  drag=null;
+});
+cv.addEventListener('pointercancel',()=>drag=null);
+function move(e){
+  if(recMode){recHover(e);return}
+  if(editOn&&selSet>=0){editHover(e);return}
+  if(!drag)return;const p=wpos(e);
+  if(drag.k==='a'){aim=drag.aim0+Math.atan2(p.y-balls[0].y,p.x-balls[0].x)-drag.a0}
+  else if(drag.k==='q'){aim=drag.aim0-((p.x-drag.p0.x)*drag.n.x+(p.y-drag.p0.y)*drag.n.y)/CUE_FINE}
+  else{
+    if(!drag.moved){if(Math.hypot(e.clientX-drag.x0,e.clientY-drag.y0)<6)return;drag.moved=true;preShot=null}
+    if(drag.i<0)return;
+    const b=balls[drag.i];
+    b.x=Math.min(W-R,Math.max(R,drag.b0.x+p.x-drag.p0.x));b.y=Math.min(H-R,Math.max(R,drag.b0.y+p.y-drag.p0.y));
+    for(let n=0;n<2;n++)balls.forEach((o,j)=>{
+      if(j===drag.i)return;
+      let dx=b.x-o.x,dy=b.y-o.y,d=Math.hypot(dx,dy);
+      if(d<2*R){if(d<1e-6){dx=1;dy=0;d=1}b.x=Math.min(W-R,Math.max(R,o.x+dx/d*2*R));b.y=Math.min(H-R,Math.max(R,o.y+dy/d*2*R))}
+    });
+  }
+  draw();
+}
+$('guideBtn').onclick=()=>{guides=!guides;$('guideBtn').classList.toggle('on',guides);draw()};
+function fsOn(){const d=document;return !!(d.fullscreenElement||d.webkitFullscreenElement)}
+function fsToggle(){
+  const d=document,el=d.documentElement;
+  try{
+    const f=fsOn()?(d.exitFullscreen||d.webkitExitFullscreen):(el.requestFullscreen||el.webkitRequestFullscreen);
+    const r=f&&f.call(fsOn()?d:el,fsOn()?undefined:{navigationUI:'hide'});
+    if(r&&r.catch)r.catch(()=>{});
+  }catch(_){}
+}
+const isApp=matchMedia('(display-mode: fullscreen)').matches||matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+if(!isApp)addEventListener('pointerup',()=>{if(!fsOn())fsToggle()},{once:true}); // 앱으로 설치해 열면 이미 전체화면이라 건너뜀
+if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(()=>{});
+$('fsBtn').onclick=fsToggle;
+$('modeBtn').onclick=()=>{if(shot)finishShot();if(histMode)histExit();moveMode=!moveMode;selBall=-1;$('modeBtn').classList.toggle('on',moveMode);draw()};
+let ttT=0;
+function ttHide(){clearTimeout(ttT);$('tt').style.display='none'}
+function ttShow(text,r,hideAfter){ // 값이 바뀌는 컨트롤 바로 위에 잠깐 표시(위 공간이 없으면 아래)
+  const t=$('tt');t.textContent=text;t.style.display='block';
+  const w=t.offsetWidth,h=t.offsetHeight;
+  t.style.left=Math.max(w/2+4,Math.min(innerWidth-w/2-4,r.left+r.width/2))+'px';
+  let top=r.top-h-8;if(top<4)top=r.bottom+8;t.style.top=top+'px';
+  clearTimeout(ttT);if(hideAfter)ttT=setTimeout(ttHide,hideAfter);
+}
+let tdrag=null,bgd=null;
+function tipBig(on){
+  if(!on){tp.classList.remove('big');tp.style.cssText='';return 0}
+  const r=tp.getBoundingClientRect(),size=Math.min(160,innerWidth-8,innerHeight-8),cx=r.left+r.width/2,cy=r.top+r.height/2; // 제자리(작은 공 중심)에서 확대, 화면 밖으로는 안 나가게
+  tp.classList.add('big');
+  tp.style.width=tp.style.height=size+'px';
+  tp.style.left=Math.min(innerWidth-size-4,Math.max(4,cx-size/2))+'px';
+  tp.style.top=Math.min(innerHeight-size-4,Math.max(4,cy-size/2))+'px';
+  return size*0.42;
+}
+function tipSet(on){
+  tipOpen=on;document.body.classList.toggle('tipopen',on);if(!on)ttHide();
+  if(on)tipRad=tipBig(true);else{tipBig(false);tipRad=0}
+}
+function tipDelta(st,e){snapTip(st.cx+(e.clientX-st.x0)/tipRad,st.cy-(e.clientY-st.y0)/tipRad);draw();ttShow(tipLabel(),tp.getBoundingClientRect())} // 확대된 공 기준 1:1 상대 이동
+tp.addEventListener('pointerdown',e=>{if(shot)finishShot();tdrag={x0:e.clientX,y0:e.clientY,cx:sx,cy:sy,moved:false};tp.setPointerCapture(e.pointerId)});
+tp.addEventListener('pointermove',e=>{
+  if(!tdrag||!tipOpen)return;
+  if(!tdrag.moved){if(Math.hypot(e.clientX-tdrag.x0,e.clientY-tdrag.y0)<6)return;tdrag.moved=true}
+  tipDelta(tdrag,e);
+});
+tp.addEventListener('pointerup',()=>{if(tdrag&&!tdrag.moved)tipSet(!tipOpen);else if(tdrag)ttShow(tipLabel(),tp.getBoundingClientRect(),700);tdrag=null}); // 터치(탭)하면 확대 ↔ 축소
+tp.addEventListener('pointercancel',()=>{tdrag=null});
+document.addEventListener('pointerdown',e=>{ // 확대 중에는 당구대 등 다른 곳을 드래그해도 당점이 움직임
+  if(!tipOpen||tp.contains(e.target)||e.target.closest('button,input,label,#setMenu'))return;
+  e.stopPropagation();bgd={id:e.pointerId,x0:e.clientX,y0:e.clientY,cx:sx,cy:sy,moved:false};
+},true);
+document.addEventListener('pointermove',e=>{
+  if(!bgd||e.pointerId!==bgd.id)return;
+  if(!bgd.moved){if(Math.hypot(e.clientX-bgd.x0,e.clientY-bgd.y0)<3)return;bgd.moved=true}
+  tipDelta(bgd,e);
+});
+['pointerup','pointercancel'].forEach(ev=>document.addEventListener(ev,e=>{if(bgd&&e.pointerId===bgd.id){if(bgd.moved)ttShow(tipLabel(),tp.getBoundingClientRect(),700);bgd=null}}));
+$('len').oninput=()=>{if(shot)finishShot();draw()};
+$('shotUndo').onclick=undoShot;
+$('shotSkip').onclick=finishShot;
+$('setBtn').onclick=()=>$('setMenu').classList.toggle('open');
+$('histClear').onclick=()=>{hist=[];histN=0;histSave();hIdx=0;if(histMode)histNav()};
+$('histBtn').onclick=()=>histMode?histExit():histEnter();
+$('hPrev').onclick=()=>histGo(-1);
+$('hNext').onclick=()=>histGo(1);
+$('hDel').onclick=()=>{ // 두 번 눌러야 삭제(실수 방지)
+  if(!histMode||hIdx>=hist.length)return;
+  const b=$('hDel');
+  if(!b.classList.contains('arm')){b.textContent='정말?';b.classList.add('arm');hDelT=setTimeout(hDelReset,2200);return}
+  hist.splice(hIdx,1);histSave();
+  hIdx=Math.max(0,Math.min(hist.length,hIdx-1)); // 삭제 후 한 칸 이전 기록(없으면 다음/현재)으로
+  histApply(hIdx<hist.length?hist[hIdx]:hCur);histNav();
+};
+$('setClose').onclick=()=>$('setMenu').classList.remove('open');
+(()=>{ // 샷 버튼: 탭 = 샷, 위/아래로 드래그 = 레일 스피드 (20px당 0.5)
+  const b=$('shotBtn'),L=$('len');let st=null;
+  b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);st={y:e.clientY,v:+L.value||3,moved:false}});
+  b.addEventListener('pointermove',e=>{
+    if(!st)return;const dy=st.y-e.clientY;
+    if(!st.moved){if(Math.abs(dy)<7)return;st.moved=true}
+    const v=Math.min(+L.max,Math.max(+L.min,st.v+Math.round(dy/20)*0.5));
+    if(v!==(+L.value)){L.value=v;$('lenV').textContent=v;L.oninput()}
+    ttShow(v+' 레일',b.getBoundingClientRect());
+  });
+  b.addEventListener('pointerup',()=>{const s=st;st=null;if(s&&!s.moved)startShot();else if(s)ttShow((+L.value)+' 레일',b.getBoundingClientRect(),600)});
+  b.addEventListener('pointercancel',()=>{st=null});
+  b.addEventListener('click',e=>{if(e.detail===0)startShot()}); // 키보드(Enter) 접근
+})();
+$('rect').onchange=draw;
+/* ---- 시스템 세트: 레일 B/T(장축 0~8), L/R(단축 0~4), 값=프레임 다이아몬드 번호 ---- */
+const HN=['상','중상','중','중하','하'];
+const gy=j=>(2-j)*0.3,gx=n=>n*0.1; // n: 반팁 단위 정수(-8..8), 1팁=0.2R
+const maxN=j=>(j===0||j===4?4:6); // 상/하: 2팁, 중상·중·중하: 3팁
+const okCell=(j,n)=>Math.abs(n)<=maxN(j);
+const xLabel=n=>n===0?'무회전':(n<0?'좌':'우')+Math.abs(n)/2+'팁';
+const hLabel=q=>(((q>>1)%12)||12)+'시'+(q&1?'30분':''); // q: 0~23 (30분 단위)
+let tmode='clock';
+function tipPoints(){
+  const p=[];
+  if(tmode==='grid'){
+    for(let j=0;j<5;j++)for(let n=-8;n<=8;n++)if(okCell(j,n))p.push({x:Math.round(gx(n)*100)/100,y:Math.round(gy(j)*100)/100,h:Math.abs(n)%2===1});
+  }else{
+    p.push({x:0,y:0});
+    for(let q=0;q<24;q++)for(let t=1;t<=6;t++){const a=q*Math.PI/12;p.push({x:t*0.1*Math.sin(a),y:t*0.1*Math.cos(a),h:q%2===1||t%2===1})}
+  }
+  return p;
+}
+function snapTip(x,y){
+  let b=null,bd=1e9;
+  tipPoints().forEach(q=>{const d=Math.hypot(q.x-x,q.y-y);if(d<bd){bd=d;b=q}});
+  sx=b.x;sy=b.y;
+}
+function tipLabel(){
+  if(tmode==='clock'){
+    const t=Math.round(Math.hypot(sx,sy)/0.1);if(!t)return'중심';
+    const q=(Math.round(Math.atan2(sx,sy)/(Math.PI/12))+24)%24;return hLabel(q)+' '+t/2+'팁';
+  }
+  return HN[Math.round(2-sy/0.3)]+' '+xLabel(Math.round(sx/0.1));
+}
+function parseTip(t){
+  if(Array.isArray(t))return t;
+  const s=String(t).trim();
+  if(s==='중심')return[0,0];
+  let m=s.match(/^(\d+)시\s*(30분)?\s*(\d+(?:\.5)?)팁$/);
+  if(m){
+    const a=((m[1]%12)*2+(m[2]?1:0))*Math.PI/12,u=m[3]*0.2;
+    if(u>0.6+1e-9)throw 0;
+    return[u*Math.sin(a),u*Math.cos(a)];
+  }
+  const[h,x]=s.split(/\s+/),j=HN.indexOf(h);
+  let n=x==='무회전'?0:NaN;
+  m=(x||'').match(/^([좌우])(\d+(?:\.5)?)팁$/);
+  if(m)n=(m[1]==='좌'?-1:1)*Math.round(m[2]*2);
+  if(j<0||isNaN(n)||!okCell(j,n))throw 0;
+  return[Math.round(gx(n)*100)/100,Math.round(gy(j)*100)/100];
+}
+let sets=[];
+$('data').value='[]';
+function fp(r,v){
+  const cl=(a,lo,hi)=>Math.min(hi,Math.max(lo,a));
+  if(r==='B')return{x:cl(v/8*W,R,W-R),y:H-R};
+  if(r==='T')return{x:cl(v/8*W,R,W-R),y:R};
+  if(r==='L')return{x:R,y:cl(v/4*H,R,H-R)};
+  return{x:W-R,y:cl(v/4*H,R,H-R)};
+}
+function sysPath(){ // 학습 모드: 선택한 시스템의 선택한 세트를 그대로 사용 (다른 세트와 섞지 않음)
+  let t=sets[selSet];
+  if(!t||t.sn!==curSys)t=sets.find(q=>q.sn===curSys&&q.cf&&q.cf[0]);
+  if(!t||!t.cf||!t.cf[0])return null;
+  const c=extendC(t.c,t.tip,{flags:true,tail:$('extTail').checked});
+  return{pts:rec2pts(c),c};
+}
+function applySets(){
+  try{
+    const a=JSON.parse($('data').value);
+    if(!Array.isArray(a)||!a.every(s=>s.tip!=null&&Array.isArray(s.c)&&s.c.every(q=>q===null||Array.isArray(q))))throw 0;
+    a.forEach(s=>{s.sn=s.system||'시스템 1';s.tl=typeof s.tip==='string'?s.tip:fmtTip(s.tip);s.tip=parseTip(s.tip)});
+    sets=a;a.forEach(s=>{if(!sysNames.includes(s.sn))sysNames.push(s.sn)});if(curSys&&!sysNames.includes(curSys))curSys='';renderSys();sets.forEach(t=>t.cf=fullC(t.c));if(selSet>=sets.length)selSet=-1;editIdx=-1;renderList();$('msg').textContent=a.length+'세트';
+  }catch(e){$('msg').textContent='형식 오류'}
+  draw();
+}
+document.querySelectorAll('input[name=tm]').forEach(r=>r.onchange=()=>{tmode=r.value;snapTip(sx,sy);draw()});
+let fh=null,ballSave=null,sysNames=[],curSys='',sysT=0,recMode=false,recPts=[],hover=null,selSet=-1,editOn=false,editIdx=-1,tgt=0,chk=new Set();
+function framePos(r,v){
+  if(r==='T')return{x:v/8*W,y:-115};
+  if(r==='B')return{x:v/8*W,y:H+115};
+  if(r==='L')return{x:-115,y:v/4*H};
+  return{x:W+115,y:v/4*H};
+}
+const OUT={T:{x:0,y:-1},B:{x:0,y:1},L:{x:-1,y:0},R:{x:1,y:0}};
+function nosePos(r,v){
+  if(r==='T')return{x:v/8*W,y:0};
+  if(r==='B')return{x:v/8*W,y:H};
+  if(r==='L')return{x:0,y:v/4*H};
+  return{x:W,y:v/4*H};
+}
+// C값 → 공중심사각형 위의 실제 반사점. 쿠션날 점은 수직 투영, 프레임 점은 이전 점에서 프레임 점으로 그은 선이 공중심사각형과 만나는 점
+function reflD(d,r){return(r==='T'||r==='B')?{x:d.x,y:-d.y}:{x:-d.x,y:d.y}}
+function reflP(p,r){
+  if(r==='T')return{x:p.x,y:2*R-p.y};
+  if(r==='B')return{x:p.x,y:2*(H-R)-p.y};
+  if(r==='L')return{x:2*R-p.x,y:p.y};
+  return{x:2*(W-R)-p.x,y:p.y};
+}
+function hitRail(P,Q,r){
+  const hz=r==='T'||r==='B',e=(r==='T'||r==='L')?R:(hz?H-R:W-R);
+  const pc=hz?P.y:P.x,den=(hz?Q.y:Q.x)-pc;
+  if(Math.abs(den)<1e-9)return null;
+  const t=(e-pc)/den;
+  if(!(t>1e-9&&t<=1+1e-9))return null;
+  const pt={x:P.x+(Q.x-P.x)*t,y:P.y+(Q.y-P.y)*t};
+  if(pt.x<R-1e-6||pt.x>W-R+1e-6||pt.y<R-1e-6||pt.y>H-R+1e-6)return null;
+  return pt;
+}
+function unfold(A,B,seq){ // 거울상(펼침) 기법: 반사 순서가 정해지면 직선으로 반사점 계산
+  let Bs=B;
+  for(let i=seq.length-1;i>=0;i--)Bs=reflP(Bs,seq[i]);
+  const pts=[];let P=A,Q=Bs;
+  for(const r of seq){const h=hitRail(P,Q,r);if(!h)return null;pts.push(h);Q=reflP(Q,r);P=h}
+  return pts;
+}
+function predict(P,d,k){ // 입사 방향을 반사시켜 처음 닿는 레일 순서 예측
+  const seq=[];let p={...P},v={...d};
+  for(let i=0;i<k;i++){
+    const w=wallT(p,v);if(!w.m)return null;
+    const r=w.m.x>0?'R':w.m.x<0?'L':w.m.y>0?'B':'T';
+    seq.push(r);p={x:p.x+v.x*w.t,y:p.y+v.y*w.t};v=reflD(v,r);
+  }
+  return seq;
+}
+// 입력된 C 사이에 생략된 C를 채움 → [레일,값,'N',true] (쿠션날 포인트). 실제 반사점(프레임점 직선 기준)과 입사 방향을 따라가며 반사 법칙으로 계산
+function fullC(c){
+  const out=c.slice(),idx=[];c.forEach((q,i)=>{if(q)idx.push(i)});
+  if(idx.length<2)return out;
+  const q0=out[idx[0]];
+  let org=((q0[2]||'F')==='F'?framePos:nosePos)(q0[0],q0[1]),prevDir=null; // org: 현재 직선의 시작점(첫 구간은 C0 위치)
+  const step=(p)=>{prevDir={x:p.x-org.x,y:p.y-org.y};org=p};
+  for(let n=1;n<idx.length;n++){
+    const a=idx[n-1],b=idx[n],k=b-a-1,qb=out[b],rb=qb[0],kb=qb[2]||'F';
+    if(k>0){
+      const ra=out[a][0],T=kb==='F'?framePos(rb,qb[1]):fp(rb,qb[1]); // 목표: 프레임점이면 그 점으로 이어지는 직선
+      let seq=prevDir?predict(org,reflD(prevDir,ra),k):null;
+      if(seq&&(seq[0]===ra||seq[k-1]===rb||seq.some((r,j)=>j&&r===seq[j-1])))seq=null;
+      let pts=seq&&unfold(org,T,seq);
+      if(!pts&&k<=3){ // 예측 실패 시 가능한 레일 순서를 모두 시도해 가장 짧은 경로 선택
+        let best=1e18;
+        const walk=(cur,prevR)=>{
+          if(cur.length===k){
+            if(cur[k-1]===rb)return;
+            const p=unfold(org,T,cur);if(!p)return;
+            let len=0,q=org;p.concat([T]).forEach(z=>{len+=Math.hypot(z.x-q.x,z.y-q.y);q=z});
+            if(len<best){best=len;pts=p;seq=cur.slice()}
+            return;
+          }
+          ['T','B','L','R'].forEach(r=>{if(r!==prevR)walk(cur.concat(r),r)});
+        };
+        walk([],ra);
+      }
+      if(pts)pts.forEach((p,j)=>{
+        const r=seq[j],hz=r==='T'||r==='B';
+        out[a+1+j]=[r,Math.round((hz?p.x/(W/8):p.y/(H/4))*1000)/1000,'N',true];
+        step(p);
+      });
+    }
+    let pb=fp(rb,qb[1]);
+    if(kb==='F'){const h=hitRail(org,framePos(rb,qb[1]),rb);if(h)pb=h}
+    step(pb);
+  }
+  return out;
+}
+function entryPt(S,Q){ // 선분 S→Q가 공중심사각형에 처음 들어오는 점
+  let t0=0,t1=1;const dx=Q.x-S.x,dy=Q.y-S.y;
+  const clip=(p,q)=>{
+    if(Math.abs(p)<1e-12)return q>=0;
+    const t=q/p;
+    if(p<0){if(t>t1)return false;if(t>t0)t0=t}else{if(t<t0)return false;if(t<t1)t1=t}
+    return true;
+  };
+  if(!clip(-dx,S.x-R)||!clip(dx,W-R-S.x)||!clip(-dy,S.y-R)||!clip(dy,H-R-S.y))return null;
+  return{x:S.x+dx*t0,y:S.y+dy*t0};
+}
+// C0는 선분의 시작점(프레임/쿠션날 위 지정 위치). P[start]=수구가 놓일 수 있는 선분의 시작(공중심사각형 진입점)
+function rec2pts(c){
+  const P=[];let org=null,S=null,start=-1,seg0=false;
+  c.forEach((q,i)=>{
+    if(!q){P.push(null);return}
+    const r=q[0],k=q[2]||'F',base=fp(r,q[1]);
+    if(start<0){start=i;seg0=true;S=org=(k==='F'?framePos:nosePos)(r,q[1]);P.push(base);return}
+    let pt=base;
+    if(k==='F'){const h=hitRail(org,framePos(r,q[1]),r);if(h)pt=h}
+    if(seg0){const e=entryPt(org,pt);if(e)P[start]=e;seg0=false}
+    P.push(pt);org=pt;
+  });
+  P.S=S;P.start=start;
+  return P;
+}
+function sysLine(sp){const P=sp.pts,i1=P.findIndex((q,i)=>i>P.start&&q);return{a:P[P.start],b:i1>=0?P[i1]:P[P.start]}}
+function cuePos(sp){const{a,b}=sysLine(sp);return{x:a.x+(b.x-a.x)*sysT,y:a.y+(b.y-a.y)*sysT}}
+function drawC(c,color,tip,opt){
+  c=fullC(c);if(tip)c=extendC(c,tip,opt);
+  const P=rec2pts(c),first=c.findIndex(q=>!!q);
+  const lin=[];if(P.S)lin.push({x:P.S.x,y:P.S.y,u:false});
+  P.forEach((p,i)=>{if(p&&i>P.start)lin.push({x:p.x,y:p.y,u:!!c[i][4]})});
+  for(let n=1;n<lin.length;n++){ // 도달 구간은 실선, 속도 부족으로 못 가는 구간은 흐린 점선
+    ctx.setLineDash(lin[n].u?[10,12]:[]);ctx.globalAlpha=lin[n].u?0.35:1;ctx.lineWidth=6;ctx.strokeStyle=color;
+    ctx.beginPath();ctx.moveTo(lin[n-1].x,lin[n-1].y);ctx.lineTo(lin[n].x,lin[n].y);ctx.stroke();
+  }
+  ctx.globalAlpha=1;ctx.setLineDash([]);
+  ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='bold 46px sans-serif';
+  c.forEach((q,i)=>{
+    if(!q)return;
+    const k=q[2]||'F',au=!!q[3],m=(k==='F'?framePos:nosePos)(q[0],q[1]),u=OUT[q[0]],p=P[i];
+    ctx.globalAlpha=q[4]?0.3:au?0.65:1;
+    if(k==='F'&&i>first){ctx.setLineDash([14,12]);ctx.lineWidth=3;ctx.strokeStyle=color;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(m.x,m.y);ctx.stroke();ctx.setLineDash([])}
+    ctx.fillStyle=color;ctx.strokeStyle=color;
+    ctx.beginPath();ctx.arc(p.x,p.y,au?6:8,0,7);ctx.fill();
+    if(au){ctx.lineWidth=4;ctx.beginPath();ctx.arc(m.x,m.y,10,0,7);ctx.stroke()}
+    else{ctx.beginPath();ctx.arc(m.x,m.y,k==='F'?13:9,0,7);ctx.fill()}
+    const d=k==='F'?33:-55,lx=m.x+u.x*d,ly=m.y+u.y*d;
+    ctx.save();ctx.translate(lx,ly);ctx.rotate(-rot*Math.PI/2);
+    ctx.lineWidth=6;ctx.strokeStyle='rgba(0,0,0,.65)';ctx.strokeText('C'+i,0,0);
+    ctx.fillStyle='#fff';ctx.fillText('C'+i,0,0);ctx.restore();
+    ctx.globalAlpha=1;
+  });
+}
+const CV=115/(W/8); // 다이아몬드 선 사각형 모서리까지의 거리(다이아몬드 단위, ≈0.324)
+function snapV(v,mx,ext){ // 0.1(10등분) 단위. 프레임점은 사각형 모서리까지 확장하고 끝점은 모서리로 스냅
+  const lo=ext?-CV:0,hi=mx+(ext?CV:0);
+  v=Math.min(hi,Math.max(lo,v));
+  if(ext){if(v<=-0.312)return Math.round(-CV*1e4)/1e4;if(v>=mx+0.312)return Math.round((mx+CV)*1e4)/1e4}
+  return Math.round(v*10)/10;
+}
+function snapFrame(p){
+  const out={T:-p.y,B:p.y-H,L:-p.x,R:p.x-W};
+  const F=Math.max(out.T,out.B,out.L,out.R)>0; // 쿠션날 바깥=프레임포인트, 안쪽=쿠션날 포인트
+  let r='T',bd=1e9;
+  for(const k of ['T','B','L','R']){const d=Math.abs(out[k]-(F?115:0));if(d<bd){bd=d;r=k}}
+  const hz=r==='T'||r==='B',mx=hz?8:4,v=hz?p.x/(W/8):p.y/(H/4);
+  return[r,snapV(v,mx,F),F?'F':'N'];
+}
+function hv(){return hover?' · '+(hover[2]==='F'?'프레임 ':'쿠션날 ')+hover[0]+' '+(Math.abs(hover[1]*10-Math.round(hover[1]*10))<1e-6?hover[1].toFixed(1):hover[1].toFixed(2)):''}
+function status(){
+  let t=(curSys&&!$('learn').checked)?'시스템 편집: 세트를 선택하거나 새 세트를 입력하세요':'공 드래그: 배치 · 빈 곳 드래그: 큐선 방향';
+  if(recMode)t='C'+tgt+' 입력 중'+hv();
+  else if(editOn&&selSet>=0)t=editIdx<0?'수정할 C점을 클릭':'C'+editIdx+' → 새 위치 클릭'+hv();
+  $('rs').textContent=t;
+}
+function fmtTip(a){
+  const x=a[0],y=a[1],n=Math.round(x/0.1),j=Math.round(2-y/0.3);
+  if(j>=0&&j<5&&Math.abs(n)<=8&&okCell(j,n)&&Math.abs(gx(n)-x)<1e-3&&Math.abs(gy(j)-y)<1e-3)return HN[j]+' '+xLabel(n);
+  const t=Math.round(Math.hypot(x,y)/0.1);if(!t)return'중심';
+  const q=(Math.round(Math.atan2(x,y)/(Math.PI/12))+24)%24;
+  return hLabel(q)+' '+t/2+'팁';
+}
+function trimC(c){while(c.length&&!c[c.length-1])c.pop();return c}
+function saveSets(){
+  sets.forEach(t=>t.cf=fullC(t.c));
+  $('data').value='[\n'+sets.map(t=>JSON.stringify({system:t.sn,tip:t.tl,c:t.c})).join(',\n')+'\n]';
+  $('msg').textContent=sets.length+'세트';renderList();
+  autoSave();
+}
+function renderChips(){
+  const box=$('chips'),show=recMode||(editOn&&selSet>=0&&!!sets[selSet]);
+  box.style.display=show?'flex':'none';
+  if(!show)return;
+  const cur=recMode?recPts:sets[selSet].c,sel=recMode?tgt:editIdx;
+  box.innerHTML='';
+  for(let i=0;i<8;i++){
+    const b=document.createElement('button');b.textContent='C'+i;
+    b.className=(i===sel?'on':'')+(cur[i]?' fill':'');
+    b.onclick=()=>{if(recMode)tgt=i;else editIdx=editIdx===i?-1:i;hover=null;renderChips();status();draw()};
+    box.appendChild(b);
+  }
+  const d=document.createElement('button');d.textContent='C점 삭제';
+  d.onclick=()=>{
+    if(recMode)recPts[tgt]=null;
+    else if(editIdx>=0&&sets[selSet]){sets[selSet].c[editIdx]=null;trimC(sets[selSet].c);saveSets();return}
+    renderChips();status();draw();
+  };
+  box.appendChild(d);
+}
+function renderList(){
+  const L=$('slist');L.innerHTML='';
+  let vi=0;
+  sets.forEach((t,i)=>{
+    if(curSys&&t.sn!==curSys)return;vi++;
+    const row=document.createElement('div');row.style.cssText='display:flex;gap:6px;align-items:center;margin-top:4px';
+    const cb=document.createElement('input');cb.type='checkbox';cb.checked=chk.has(i);
+    cb.onchange=()=>{if(cb.checked)chk.add(i);else chk.delete(i)};
+    const b=document.createElement('button');b.textContent=(curSys?'':t.sn+' · ')+'세트 '+vi+' · '+t.tl;
+    b.style.cssText='flex:1;text-align:left;font-size:12px;padding:3px 8px';
+    if(i===selSet)b.className='on';
+    b.onclick=()=>selectSet(i===selSet?-1:i);
+    row.append(cb,b);L.appendChild(row);
+  });
+  $('delSel').style.display=sets.length?'inline-block':'none';
+  const ok=selSet>=0&&!!sets[selSet]&&!recMode;
+  $('sedit').style.display=ok?'flex':'none';
+  $('sinfo').textContent=ok?sets[selSet].sn+' · '+sets[selSet].tl:'';
+  $('eBtn').className=editOn?'on':'';
+  renderChips();
+}
+function selectSet(i){
+  selSet=i;editOn=false;editIdx=-1;hover=null;
+  const t=sets[i];
+  if(t){ // 시스템 경로가 선택한 세트 값 그대로 나오도록 당점·C0 입력을 맞춤
+    sx=t.tip[0];sy=t.tip[1];tmode=/시/.test(t.tl)?'clock':'grid';
+    document.querySelector('input[name=tm][value='+tmode+']').checked=true;
+  }
+  renderList();status();draw();
+}
+function editClick(e){
+  const p=wpos(e),t=sets[selSet];
+  if(editIdx<0){
+    let b=-1,bd=60;
+    t.c.forEach((q,i)=>{
+      if(!q)return;
+      const m=(q[2]==='N'?nosePos:framePos)(q[0],q[1]),d=Math.hypot(m.x-p.x,m.y-p.y);
+      if(d<bd){bd=d;b=i}
+    });
+    editIdx=b;
+  }else{
+    while(t.c.length<=editIdx)t.c.push(null);
+    t.c[editIdx]=snapFrame(p);editIdx=-1;hover=null;saveSets();
+  }
+  renderChips();status();draw();
+}
+function editHover(e){hover=editIdx>=0?snapFrame(wpos(e)):null;status();draw()}
+function recHover(e){hover=snapFrame(wpos(e));status();draw()}
+function recClick(e){
+  recPts[tgt]=snapFrame(wpos(e));hover=null;
+  if(tgt<7)tgt++;
+  renderChips();status();draw();
+}
+function updateRecUI(){
+  $('recBtn').style.display=recMode?'none':'inline-block';
+  $('recDone').style.display=recMode?'inline-block':'none';
+  $('recCancel').style.display=recMode?'inline-block':'none';
+  renderList();
+}
+function stopRec(){recMode=false;recPts=[];hover=null;tgt=0;updateRecUI();status()}
+$('recBtn').onclick=()=>{recMode=true;recPts=Array(8).fill(null);tgt=0;hover=null;editOn=false;editIdx=-1;updateRecUI();status();draw()};
+$('recCancel').onclick=()=>{stopRec();draw()};
+$('recDone').onclick=()=>{
+  if(!recPts[0]||recPts.filter(Boolean).length<2){$('rs').textContent='C0를 포함해 2개 이상 입력하세요';return}
+  if(!curSys){curSys='시스템 '+(sysNames.length+1);sysNames.push(curSys)}
+  sets.push({sn:curSys,tip:[sx,sy],tl:tipLabel(),c:trimC(recPts.slice())});
+  selSet=sets.length-1;renderSys();stopRec();saveSets();draw();
+};
+$('eBtn').onclick=()=>{editOn=!editOn;editIdx=-1;hover=null;renderList();status();draw()};
+$('eTip').onclick=()=>{if(selSet<0||!sets[selSet])return;sets[selSet].tip=[sx,sy];sets[selSet].tl=tipLabel();saveSets();draw()};
+$('delSel').onclick=()=>{
+  if(!chk.size)return;
+  let ns=-1;const keep=[];
+  sets.forEach((t,i)=>{if(!chk.has(i)){if(i===selSet)ns=keep.length;keep.push(t)}});
+  sets=keep;selSet=ns;chk.clear();editOn=editOn&&ns>=0;editIdx=-1;saveSets();draw();
+};
+function ballMode(){ // 시스템 편집 중에는 공 3개를 테이블 바깥으로 치우고, 기본/학습 모드에서 원위치
+  const hide=!!curSys&&!$('learn').checked;
+  if(hide&&!ballSave){ballSave=balls.map(b=>({x:b.x,y:b.y}));balls.forEach((b,i)=>{b.x=-800;b.y=-800+i*120})}
+  else if(!hide&&ballSave){balls.forEach((b,i)=>{b.x=ballSave[i].x;b.y=ballSave[i].y});ballSave=null}
+}
+function renderSys(){
+  const sel=$('sysSel');sel.innerHTML='';
+  const o0=document.createElement('option');o0.value='';o0.textContent='없음 (기본 엔진)';sel.appendChild(o0);
+  sysNames.forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o)});
+  sel.value=curSys;
+  $('sysDel').style.display=curSys?'inline-block':'none';
+  $('learnRow').style.display=curSys?'flex':'none';
+  ballMode();
+}
+function pickSys(n){curSys=n;selSet=-1;editOn=false;editIdx=-1;chk.clear();renderSys();renderList();status();draw()}
+$('sysSel').onchange=e=>pickSys(e.target.value);
+$('sysAdd').onclick=()=>{const n=$('sysName').value.trim();if(!n)return;if(!sysNames.includes(n))sysNames.push(n);$('sysName').value='';pickSys(n)};
+$('sysDel').onclick=()=>{
+  if(!curSys)return;
+  sets=sets.filter(t=>t.sn!==curSys);sysNames=sysNames.filter(n=>n!==curSys);
+  curSys='';selSet=-1;editOn=false;editIdx=-1;chk.clear();saveSets();renderSys();draw();
+};
+/* ---- JSON 파일 연결 (Chrome File System Access): 세트 저장·수정·삭제 때마다 연결한 파일을 자동 갱신 ---- */
+const idb={
+  open:()=>new Promise((res,rej)=>{const r=indexedDB.open('billiard-trainer',1);r.onupgradeneeded=()=>r.result.createObjectStore('h');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}),
+  async get(k){const d=await this.open();return new Promise((res,rej)=>{const t=d.transaction('h').objectStore('h').get(k);t.onsuccess=()=>res(t.result);t.onerror=()=>rej(t.error)})},
+  async set(k,v){const d=await this.open();return new Promise((res,rej)=>{const t=d.transaction('h','readwrite').objectStore('h').put(v,k);t.onsuccess=()=>res();t.onerror=()=>rej(t.error)})}
+};
+const RW={mode:'readwrite'},FT=[{description:'JSON',accept:{'application/json':['.json']}}];
+const say=t=>{$('fmsg').textContent=t};
+const dump=()=>{$('data').value='[\n'+sets.map(t=>JSON.stringify({system:t.sn,tip:t.tl,c:t.c})).join(',\n')+'\n]'};
+let wq=Promise.resolve(),askedPick=false,pendingRestore=false,restoreP=null,restoreFail='';
+const errTxt=e=>(e&&(e.name?e.name+': ':'')+(e.message||''))||String(e);
+// 세트가 바뀔 때마다(저장·수정·삭제) 고정된 JSON 파일 하나를 다시 씀. 파일은 처음 저장할 때 한 번만 지정
+function autoSave(){
+  if(!window.showSaveFilePicker)return;
+  wq=wq.then(async()=>{
+    try{
+      if(restoreP)await restoreP;
+      if(restoreFail){say('저장 보류: 기존 파일을 불러오지 못했습니다 ('+restoreFail+')');return} // 불러오기 실패 상태에서 덮어쓰지 않음
+      if(!fh){
+        if(askedPick)return;askedPick=true;
+        fh=await showSaveFilePicker({suggestedName:'billiard-systems.json',types:FT});
+        try{await idb.set('file',fh)}catch(e){}
+        const old=await (await fh.getFile()).text();
+        if(old.trim()){ // 이미 내용이 있는 파일이면 지우지 않고 현재 세트를 뒤에 합침
+          try{const a=JSON.parse(old);if(Array.isArray(a)){const cur=JSON.parse($('data').value);$('data').value=JSON.stringify(a.concat(cur));applySets();dump()}}catch(e){}
+        }
+      }
+      if(await fh.queryPermission(RW)!=='granted'&&await fh.requestPermission(RW)!=='granted'){say('JSON 파일 쓰기 권한이 필요합니다');return}
+      const w=await fh.createWritable();await w.write($('data').value);await w.close();
+      say('JSON 저장됨 '+new Date().toLocaleTimeString()+' · '+fh.name);
+    }catch(e){if(e&&e.name==='AbortError')askedPick=true;else say('JSON 저장 실패: '+errTxt(e))}
+  });
+}
+async function loadFrom(h){
+  const text=await (await h.getFile()).text();
+  if(!text.trim())return;
+  let a;try{a=JSON.parse(text)}catch(e){throw new Error('JSON 형식 오류: '+e.message)}
+  if(!Array.isArray(a))throw new Error('세트 배열 형식이 아닙니다');
+  $('data').value=text;applySets();
+}
+function restoreFailed(e){ // 파일이 없어졌으면 다음 저장 때 다시 지정, 그 외에는 저장을 막아 기존 파일을 보호
+  if(e&&e.name==='NotFoundError'){fh=null;askedPick=false;restoreFail='';say('저장 파일을 찾을 수 없습니다. 다음 저장 때 다시 지정합니다');return}
+  restoreFail=errTxt(e);pendingRestore=true;say('불러오기 실패 ('+restoreFail+') — 화면을 다시 클릭하면 재시도합니다');
+}
+(async()=>{ // 실행할 때 저장된 JSON 파일 하나만 불러옴 (권한 허용에는 클릭이 필요해서, 필요하면 첫 클릭 때 불러옴)
+  if(!window.showSaveFilePicker)return;
+  try{
+    const h=await idb.get('file');if(!h)return;
+    fh=h;
+    if(await h.queryPermission(RW)==='granted'){await loadFrom(h);say('불러옴 · '+h.name)}
+    else{pendingRestore=true;say(h.name+' — 화면을 한 번 클릭하면 불러옵니다')}
+  }catch(e){restoreFailed(e)}
+})();
+document.addEventListener('click',()=>{ // 클릭 안에서만 권한을 요청할 수 있음
+  if(!pendingRestore||!fh||restoreP)return;
+  pendingRestore=false;
+  restoreP=(async()=>{
+    try{
+      if(await fh.requestPermission(RW)!=='granted'){pendingRestore=true;say('쓰기 권한이 필요합니다 — 화면을 다시 클릭하세요');return}
+      await loadFrom(fh);restoreFail='';say('불러옴 · '+fh.name);
+    }catch(e){restoreFailed(e)}
+  })().finally(()=>{restoreP=null});
+},true);
+$('extTail').onchange=draw;
+$('learn').onchange=()=>{
+  ballMode();
+  if($('learn').checked&&curSys&&!(sets[selSet]&&sets[selSet].sn===curSys)){const i=sets.findIndex(t=>t.sn===curSys);if(i>=0){selectSet(i);return}}
+  status();draw();
+};
+$('rotL').onclick=()=>{rotManual=true;rot=(rot+3)%4;resize()};
+$('rotR').onclick=()=>{rotManual=true;rot=(rot+1)%4;resize()};
+$('snapCue').onclick=()=>{
+  const sp=sysPath();if(!sp)return;
+  const{a,b}=sysLine(sp);balls[0].x=a.x;balls[0].y=a.y;
+  if(b!==a)aim=Math.atan2(b.y-a.y,b.x-a.x);
+  draw();
+};
+applySets();
+status();
+resize();
+</script>
+</body>
+</html>
