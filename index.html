@@ -183,6 +183,7 @@ function wallT(p,v){
 /* ---- 물리엔진 (mm, s). 좌표: x→, y↓, z↓(테이블 방향). wz>0 = 위에서 볼 때 시계방향 (왼쪽 당점 → 시계방향, 오른쪽 당점 → 반시계방향) ----
    상태: 위치, 선속도(vx,vy), 각속도(wx,wy,wz). 천 마찰(미끄럼→구름), 쿠션/공 충돌 시 접촉점 상대속도와 쿠션·공 마찰로 회전 갱신 */
 // 물리 상수: TIP_EFF=당점 회전 세기 보정(레일 N이 '마찰 받고도 N레일 이동'이 되도록 초속이 크게 잡혀서, 회전을 같은 비율로 줄여 하단/좌우가 과해지지 않게 맞춘 값), MU_S=천 미끄럼 마찰(문헌 전형 0.2, 범위 0.15~0.4), MU_B=공-공 마찰(문헌 전형 0.06), ALPHA_Z=좌우(수직축) 회전 감쇠(rad/s²)
+const SIDE_K=2.4; // 좌우(사이드) 당점 회전 배율(TIP_EFF에 곱해짐, 하단/상단과 따로 맞춤): 3팁으로 장축에 수직입사하면 약 1.5칸 꺾이도록 보정
 const TIP_EFF=0.25,GRAV=9810,MU_S=0.2,A_ROLL=100,ALPHA_Z=14,E_B=0.96,MU_B=0.06,DT=0.001;
 function slide(b,dt){
   const ux=b.vx+R*b.wy,uy=b.vy-R*b.wx,us=Math.hypot(ux,uy); // 천과 닿는 점의 상대속도
@@ -337,7 +338,7 @@ function collide(a,b){
 }
 function simShot(){
   const c=balls[0],v0=speedOf(+$('len').value||1)*tipV(sx,sy),ax=Math.cos(aim),ay=Math.sin(aim),k=TIP_EFF*2.5*v0/R;
-  const B=[{x:c.x,y:c.y,vx:ax*v0,vy:ay*v0,wx:k*sy*ay,wy:-k*sy*ax,wz:-k*sx}];
+  const B=[{x:c.x,y:c.y,vx:ax*v0,vy:ay*v0,wx:k*sy*ay,wy:-k*sy*ax,wz:-k*SIDE_K*sx}];
   for(let i=1;i<3;i++)B.push({x:balls[i].x,y:balls[i].y,vx:0,vy:0,wx:0,wy:0,wz:0});
   const dummy={pts:[],ev:[]},fr=[],hx=W-R,hy=H-R;
   const rec=()=>B.forEach(b=>fr.push(b.x,b.y));
@@ -500,7 +501,7 @@ function extendC(c,tip,opt){
   for(let n=1;n<idx.length;n++){
     const qn=out[idx[n]];let T=null;
     if(n===1){T=geo(qn,org);cur=entryPt(org,T)||fp(q0[0],q0[1]);const u0=unit(cur,T);
-      b={x:cur.x,y:cur.y,vx:u0.x*v0,vy:u0.y*v0,wx:kk*tip[1]*u0.y,wy:-kk*tip[1]*u0.x,wz:-kk*tip[0]}}
+      b={x:cur.x,y:cur.y,vx:u0.x*v0,vy:u0.y*v0,wx:kk*tip[1]*u0.y,wy:-kk*tip[1]*u0.x,wz:-kk*SIDE_K*tip[0]}}
     else if(qn[3]){ // 자동 계산 점: 앞 C에서 물리 반사된 뒤 다음 C(시스템 데이터)를 지나도록 쿠션 위 위치를 찾음
       const nx=out[idx[n+1]],r=qn[0],hz=r==='T'||r==='B',g=geo(qn,org);
       let p=null;
@@ -540,7 +541,7 @@ function trace(){
   const key=[aim,sx,sy,rails,balls.map(q=>q.x+','+q.y)].join('|');
   if(key===traceKey)return traceVal;
   const v0=speedOf(rails)*tipV(sx,sy),dx=Math.cos(aim),dy=Math.sin(aim),k=TIP_EFF*2.5*v0/R; // 당점→초기 회전은 속도에 비례
-  const r=simulate({x:c.x,y:c.y,vx:dx*v0,vy:dy*v0,wx:k*sy*dy,wy:-k*sy*dx,wz:-k*sx},[balls[1],balls[2]],Infinity);
+  const r=simulate({x:c.x,y:c.y,vx:dx*v0,vy:dy*v0,wx:k*sy*dy,wy:-k*sy*dx,wz:-k*SIDE_K*sx},[balls[1],balls[2]],Infinity);
   traceKey=key;traceVal=r;return r;
 }
 
